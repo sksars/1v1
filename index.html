@@ -38,8 +38,8 @@ const rot=()=>touch&&innerHeight>innerWidth,VW=()=>rot()?innerHeight:innerWidth,
 const rs=()=>{document.body.classList.toggle('r',rot());R.setSize(VW(),VH());cam.aspect=VW()/VH();cam.updateProjectionMatrix()};addEventListener('resize',rs);addEventListener('orientationchange',()=>setTimeout(rs,200));rs();
 const b2=s=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer};
 const L=new T.GLTFLoader(),parse=b=>new Promise((a,r)=>L.parse(b2(b),'',a,r));
-Promise.all([parse(B64A),parse(B64M)]).then(init).catch(e=>{$('go').textContent='Load error: '+e.message});
-function init([A,M]){
+Promise.all([parse(B64A),parse(B64M),new Promise((resolve,reject)=>L.load('human_body_idle_animated.glb',resolve,undefined,reject))]).then(init).catch(e=>{$('go').textContent='Load error: '+e.message});
+function init([A,M,CHAR]){
 const map=M.scene;map.scale.setScalar(S);sc.add(map);map.updateMatrixWorld(true);
 const meshes=[];map.traverse(o=>{if(o.isMesh)meshes.push(o)});
 new T.TextureLoader().load(MAPTEX,t=>{t.flipY=false;t.encoding=T.sRGBEncoding;t.anisotropy=4;meshes.forEach(m=>{m.material.map=t;m.material.needsUpdate=true})});
@@ -48,13 +48,20 @@ const hitMap=(o,d,far)=>{rc.set(o,d);rc.far=far;return rc.intersectObjects(meshe
 const ground=(x,z,y)=>{const h=hitMap(V.set(x,y,z),DN,90);return h?h.point.y:null};
 const ONCE=new Set(['Pistol_Reload','Pistol_Shoot','Death01']);
 function mk(col){
+ // Keep the original rig hidden for its existing animation tracks and weapon attachment;
+ // render the separately uploaded GLB as the visible player body.
  const root=THREE.SkeletonUtils.clone(A.scene),tex=camo(col);
- root.traverse(o=>{if(o.isMesh){o.frustumCulled=false;const a=Array.isArray(o.material),ms=[].concat(o.material).map(m=>{m=m.clone();if(m.name==="M_Joints")m.color.set(0x222222);else{m.color.set(0xffffff);m.map=tex}m.roughness=.8;return m});o.material=a?ms:ms[0]}});
- const g=new T.Group();g.add(root);sc.add(g);const mixer=new T.AnimationMixer(root),acts={};
+ root.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.visible=false;const a=Array.isArray(o.material),ms=[].concat(o.material).map(m=>{m=m.clone();if(m.name==="M_Joints")m.color.set(0x222222);else{m.color.set(0xffffff);m.map=tex}m.roughness=.8;return m});o.material=a?ms:ms[0]}});
+ const g=new T.Group();g.add(root);
+ const body=THREE.SkeletonUtils.clone(CHAR.scene);body.name='UploadedGLBPlayer';
+ body.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;if(o.material){const a=Array.isArray(o.material);const ms=[].concat(o.material).map(m=>{const n=m.clone();n.roughness=Math.max(.45,n.roughness||.0);return n});o.material=a?ms:ms[0]}}});
+ // Center the imported model at the player's feet; source GLB is approximately 1.7 units tall.
+ const bb=new T.Box3().setFromObject(body),center=bb.getCenter(new T.Vector3());body.position.x-=center.x;body.position.z-=center.z;body.position.y-=bb.min.y;
+ g.add(body);sc.add(g);const mixer=new T.AnimationMixer(root),acts={};
  A.animations.forEach(c=>{const a=mixer.clipAction(c);if(ONCE.has(c.name)){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}acts[c.name]=a});
  let hand=null;root.traverse(o=>{if(o.isBone&&/hand\.?R$/.test(o.name))hand=o});
  let hd=null;root.traverse(o=>{if(o.isBone&&o.name==="DEF-head")hd=o});
- if(hd){const hl=new T.Mesh(new T.SphereGeometry(.15,14,8,0,6.29,0,1.7),new T.MeshStandardMaterial({color:col[1],roughness:.6}));hl.position.set(0,.1,0);hd.add(hl)}
+ if(hd){const hl=new T.Mesh(new T.SphereGeometry(.15,14,8,0,6.29,0,1.7),new T.MeshStandardMaterial({color:col[1],roughness:.6}));hl.position.set(0,.1,0);hl.visible=false;hd.add(hl)}
  const gun=new T.Mesh(new T.BoxGeometry(.05,.5,.09),new T.MeshStandardMaterial({color:0x222222}));gun.position.y=.18;
  const flash=new T.Mesh(new T.SphereGeometry(.07),new T.MeshBasicMaterial({color:0xffdd55}));flash.position.y=.33;flash.visible=false;gun.add(flash);(hand||g).add(gun);
  return{g,mixer,acts,cur:null,lock:0,pos:g.position,vy:0,hp:100,dead:false,kills:0,face:0,gun,flash,ft:0,next:0,los:false,losT:0,seen:0,sT:0,sd:1,wander:0,wx:0,wz:0,ammo:30,rl:0,respawn:0,crouch:false}}
