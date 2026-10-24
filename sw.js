@@ -1,9 +1,11 @@
 'use strict';
-const CACHE = '1v1-virtual-studio-offline-v6';
-const CORE = ['./', './index.html', './virtual_studio.glb', './human_body_idle_animated.glb', './player_rig.glb'];
+const CACHE = '1v1-virtual-studio-offline-v7';
+const CORE = ['./', './index.html', './virtual_studio.glb', './human_body_idle_animated.glb', './player_rig.glb', './AssaultRifle_1.obj', './AssaultRifle_1.mtl'];
 const LIBS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js',
+  'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
   'https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js',
