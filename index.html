@@ -41,7 +41,7 @@ Promise.all([load('player_rig.glb'),load('virtual_studio.glb'),load('human_body_
 function init([A,M,CHAR]){
 $('go').disabled=false;$('go').textContent='Choose a mode above';
 const map=M.scene;map.scale.setScalar(3);map.position.y=0;sc.add(map);map.updateMatrixWorld(true);
-const meshes=[],groundMeshes=[];map.traverse(o=>{if(o.isMesh){meshes.push(o);o.castShadow=true;o.receiveShadow=true;if(o.parent&&o.parent.name==='Cube.001')groundMeshes.push(o)}});
+const meshes=[],groundMeshes=[],mapCells=[];map.traverse(o=>{if(o.isMesh){meshes.push(o);o.castShadow=false;o.receiveShadow=false;o.frustumCulled=true;if(!o.geometry.boundingSphere)o.geometry.computeBoundingSphere();const bs=o.geometry.boundingSphere;const center=bs?bs.center.clone().applyMatrix4(o.matrixWorld):o.getWorldPosition(new T.Vector3());const e=o.matrixWorld.elements,scale=Math.max(Math.hypot(e[0],e[1],e[2]),Math.hypot(e[4],e[5],e[6]),Math.hypot(e[8],e[9],e[10]));mapCells.push({mesh:o,center,radius:(bs?bs.radius:2)*scale});if(o.parent&&o.parent.name==='Cube.001')groundMeshes.push(o)}});
 const rc=new T.Raycaster(),DN=new T.Vector3(0,-1,0),V=new T.Vector3(),V2=new T.Vector3(),D=new T.Vector3();
 const hitMap=(o,d,far)=>{rc.set(o,d);rc.far=far;return rc.intersectObjects(meshes,false)[0]||null};
 const hitGround=(o,d,far)=>{rc.set(o,d);rc.far=far;const hits=rc.intersectObjects(groundMeshes.length?groundMeshes:meshes,false);for(const h of hits){if(!h.face)continue;const n=h.face.normal.clone().applyMatrix3(new T.Matrix3().getNormalMatrix(h.object.matrixWorld)).normalize();if(n.y>.55)return h}return null};
@@ -239,7 +239,7 @@ let last=performance.now()/1e3;
  P.mixer.update(dt);B.mixer.update(dt);P.bodyMixer.update(dt);B.bodyMixer.update(dt);if(lowMem&&now-(loop.lastDraw||0)<1/30)return;loop.lastDraw=now;
  for(const c of[P,B]){if(c.ft>0){c.ft-=dt;if(c.ft<=0)c.flash.visible=false}c.recoil=Math.max(0,(c.recoil||0)-dt*5);const moving=Math.hypot(c.pos.x-(c.prevX??c.pos.x),c.pos.z-(c.prevZ??c.pos.z))>.002;c.prevX=c.pos.x;c.prevZ=c.pos.z;const phase=now*10+(c===B?1.3:0);c.body.position.y=(moving&&started&&!c.dead?Math.abs(Math.sin(phase))*.035:0)-((c.crouch&&c===P)?0.1:0);c.body.rotation.z=(moving&&started&&!c.dead?Math.sin(phase*.5)*.025:0)+(c===P?(c.recoil||0)*.035:0);c.body.rotation.x=(c===P?(c.recoil||0)*-.07:0);c.body.scale.y=(c===P&&P.crouch)? .9:1;}
  for(let i=fx.length-1;i>=0;i--){fx[i].t-=dt||.016;if(fx[i].t<=0){sc.remove(fx[i].l);fx[i].l.geometry.dispose();fx.splice(i,1)}}
- camUpdate();hm-=dt;if(hm<=0)$('cross').className='';hurt=Math.max(0,hurt-dt);$('hurt').style.opacity=hurt;
+ camUpdate();{const fwd=D.set(0,0,-1).applyQuaternion(cam.quaternion);for(const cell of mapCells){const dx=cell.center.x-P.pos.x,dy=cell.center.y-(P.pos.y+1),dz=cell.center.z-P.pos.z,dist=Math.hypot(dx,dy,dz);const dot=(dx*fwd.x+dy*fwd.y+dz*fwd.z)/(dist||1);cell.mesh.visible=dist<88&&(dot>-.42||dist<13)}}hm-=dt;if(hm<=0)$('cross').className='';hurt=Math.max(0,hurt-dt);$('hurt').style.opacity=hurt;
  $('hp').firstChild.style.width=Math.max(0,P.hp)+'%';$('ammo').textContent=P.rl?'Reloading…':P.ammo+' / ∞';
  const tp=new T.Vector3(B.pos.x,B.pos.y+2.1,B.pos.z).project(cam),tg=$('tag');
  if(B.dead||!B.g.visible||tp.z>1)tg.style.display='none';else{tg.style.display='block';tg.style.left=(tp.x*.5+.5)*VW()+'px';tg.style.top=(-tp.y*.5+.5)*VH()+'px';tg.firstChild.style.width=B.hp+'%'}
