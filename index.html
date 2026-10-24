@@ -40,7 +40,7 @@ sc.add(new T.HemisphereLight(0xffffff,0x667766,1));const sun=new T.DirectionalLi
 const rot=()=>touch&&innerHeight>innerWidth,VW=()=>rot()?innerHeight:innerWidth,VH=()=>rot()?innerWidth:innerHeight;
 const rs=()=>{document.body.classList.toggle('r',rot());R.setSize(VW(),VH());cam.aspect=VW()/VH();cam.updateProjectionMatrix()};addEventListener('resize',rs);addEventListener('orientationchange',()=>setTimeout(rs,200));rs();
 const L=new T.GLTFLoader(),load=url=>new Promise((resolve,reject)=>L.load(url,g=>resolve(g),undefined,reject));
-Promise.all([load('player_rig.glb'),load('virtual_studio.glb'),load('human_body_idle_animated.glb')]).then(init).catch(e=>{console.error('Game asset load failed:',e);$('go').disabled=false;$('go').textContent='Retry after fixing assets';$('st').textContent='3D model load failed: '+e.message+' — check GLB files and internet/cache.'});
+Promise.all([load('player_animated.glb'),load('virtual_studio.glb'),load('human_body_idle_animated.glb')]).then(init).catch(e=>{console.error('Game asset load failed:',e);$('go').disabled=false;$('go').textContent='Retry after fixing assets';$('st').textContent='3D model load failed: '+e.message+' — check GLB files and internet/cache.'});
 function init([A,M,CHAR]){
 $('go').disabled=false;$('go').textContent='Choose a mode above';
 const map=M.scene;map.scale.setScalar(3);map.position.y=0;sc.add(map);map.updateMatrixWorld(true);
