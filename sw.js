@@ -1,5 +1,5 @@
 'use strict';
-const CACHE = '1v1-virtual-studio-offline-v3';
+const CACHE = '1v1-virtual-studio-offline-v4';
 const CORE = ['./', './index.html', './virtual_studio.glb', './human_body_idle_animated.glb', './player_rig.glb'];
 const LIBS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
