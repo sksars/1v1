@@ -243,8 +243,10 @@ let last=performance.now()/1e3;
   const wt=started&&!over&&!!net.room&&!net.oppReady;if(wt){$('msg').textContent='Opponent ready ho raha hai…';loop.w=1}else if(loop.w){loop.w=0;$('msg').textContent=''}
   if(run){pUpdate(dt,now);if(offlineMode)offlineBot(dt,now);else rUpdate(dt,now)}
   net.tick(now);
- P.mixer.update(dt);B.mixer.update(dt);P.bodyMixer.update(dt);B.bodyMixer.update(dt);if(lowMem&&now-(loop.lastDraw||0)<1/30)return;loop.lastDraw=now;
+ if(lowMem&&now-(loop.lastDraw||0)<1/30)return;loop.lastDraw=now;
  for(const c of[P,B]){if(c.ft>0){c.ft-=dt;if(c.ft<=0)c.flash.visible=false}c.recoil=Math.max(0,(c.recoil||0)-dt*5);const moving=Math.hypot(c.pos.x-(c.prevX??c.pos.x),c.pos.z-(c.prevZ??c.pos.z))>.002;c.prevX=c.pos.x;c.prevZ=c.pos.z;const phase=now*10+(c===B?1.3:0);c.body.position.y=(moving&&started&&!c.dead?Math.abs(Math.sin(phase))*.035:0)-((c.crouch&&c===P)?0.1:0);c.body.rotation.z=(moving&&started&&!c.dead?Math.sin(phase*.5)*.025:0)+(c===P?(c.recoil||0)*.035:0);c.body.rotation.x=(c===P?(c.recoil||0)*-.07:0);c.body.scale.y=(c===P&&P.crouch)? .9:1;proceduralPose(c,now,moving);}
+ // Run imported animation mixers after the procedural fallback pose, so the fallback cannot overwrite animated bones.
+ P.mixer.update(dt);B.mixer.update(dt);P.bodyMixer.update(dt);B.bodyMixer.update(dt);
  for(let i=fx.length-1;i>=0;i--){fx[i].t-=dt||.016;if(fx[i].t<=0){sc.remove(fx[i].l);fx[i].l.geometry.dispose();fx.splice(i,1)}}
  camUpdate();hm-=dt;if(hm<=0)$('cross').className='';hurt=Math.max(0,hurt-dt);$('hurt').style.opacity=hurt;
  $('hp').firstChild.style.width=Math.max(0,P.hp)+'%';$('ammo').textContent=P.rl?'Reloading…':P.ammo+' / ∞';
