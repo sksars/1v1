@@ -1,6 +1,6 @@
 'use strict';
-const CACHE = '1v1-virtual-studio-offline-v10';
-const CORE = ['./', './index.html', './virtual_studio.glb', './human_body_idle_animated.glb', './player_rig.glb', './AssaultRifle_1.obj', './AssaultRifle_1.mtl', './player_animations.js'];
+const CACHE = '1v1-virtual-studio-offline-v11';
+const CORE = ['./', './index.html', './virtual_studio.glb', './human_body_idle_animated.glb', './player_rig.glb', './player_animated.glb', './AssaultRifle_1.obj', './AssaultRifle_1.mtl', './player_animations.js'];
 const LIBS = [
   'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js',
   'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js',
