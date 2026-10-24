@@ -40,7 +40,7 @@ function makeCharacter(color){
  const ko=pick(clips,[/^ko$/i,/knockdown/i,/death/i]);
  const victory=pick(clips,[/victory/i,/win/i]);
  let current=null,actionLock=0;
- function play(clip,now,force=false,once=false){if(!clip)return;if(!force&&current===clip)return;const next=actions.get(clip.name);if(!next)return;for(const a of actions.values())if(a!==next&&a.isRunning())a.fadeOut(.10);next.reset();next.enabled=true;next.clampWhenFinished=!!once;next.setEffectiveWeight(1);next.setEffectiveTimeScale(once?1.0:1.0);next.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat,once?1:Infinity);next.fadeIn(.10).play();current=clip;actionLock=now+.10}
+ function play(clip,now,force=false,once=false){if(!clip)return;const next=actions.get(clip.name);if(!next)return;if(!force&&current===clip&&next.isRunning()&&next.getEffectiveWeight()>.01)return;for(const a of actions.values()){if(a!==next){a.stop();a.enabled=false}}next.stop();next.reset();next.enabled=true;next.paused=false;next.clampWhenFinished=!!once;next.setEffectiveWeight(1);next.setEffectiveTimeScale(1);next.setLoop(once?THREE.LoopOnce:THREE.LoopRepeat,once?1:Infinity);next.play();next.setEffectiveWeight(1);current=clip;actionLock=now+.10}
  let weaponPivot=null,muzzleFlash=null;
  if(weaponTemplate){
    let hand=null;root.traverse(o=>{if(o.isBone&&/right.*hand|hand.*right|righthand|handr|mixamorigright hand/i.test(o.name.toLowerCase())&&!hand)hand=o});
