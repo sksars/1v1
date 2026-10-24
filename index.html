@@ -50,8 +50,8 @@ const hitMap=(o,d,far)=>{rc.set(o,d);rc.far=far;return rc.intersectObjects(meshe
 const hitGround=(o,d,far)=>{rc.set(o,d);rc.far=far;const hits=rc.intersectObjects(groundMeshes.length?groundMeshes:meshes,false);for(const h of hits){if(!h.face)continue;const n=h.face.normal.clone().applyMatrix3(new T.Matrix3().getNormalMatrix(h.object.matrixWorld)).normalize();if(n.y>.55)return h}return null};
 const ground=(x,z,y)=>{const h=hitGround(V.set(x,y,z),DN,90);return h?h.point.y:null};
 const ONCE=new Set(['Pistol_Reload','Pistol_Shoot','Death01']);
-function mk(col,modelScene=A.scene,isEnemy=false){
- const root=THREE.SkeletonUtils.clone(modelScene);
+function mk(col){
+ const root=THREE.SkeletonUtils.clone(A.scene);
  // Use the SAME skinned mesh and skeleton that the imported animation clips target.
  // A separate idle-body GLB had a different rig, so its bones stayed in T-pose.
  const body=root;
@@ -66,12 +66,7 @@ function mk(col,modelScene=A.scene,isEnemy=false){
  }
  const g=new T.Group();g.add(root);sc.add(g);
  const mixer=new T.AnimationMixer(root),acts={};
- let clips=A.animations;
- if(isEnemy&&T.SkeletonUtils&&T.SkeletonUtils.retargetClip){
-  const sourceRig=THREE.SkeletonUtils.clone(A.scene);
-  clips=A.animations.map(c=>{try{return T.SkeletonUtils.retargetClip(root,sourceRig,c,{preserveMatrix:true,useFirstFramePosition:true})}catch(err){console.warn('Animation retarget fallback:',c.name,err);return c}});
- }
- clips.forEach(c=>{const a=mixer.clipAction(c);if(ONCE.has(c.name)){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}acts[c.name]=a});
+ A.animations.forEach(c=>{const a=mixer.clipAction(c);if(ONCE.has(c.name)){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}acts[c.name]=a});
  // Imported clips drive the visible rig directly; don't run a second mixer or procedural bone overrides.
  const bodyMixer={update:function(){}},bodyActs={},bodyFallback=null,procBones=window.PlayerAnimations?window.PlayerAnimations.prepare(root):[];
  let hand=null;root.traverse(o=>{if(o.isBone&&/hand\.?R$/.test(o.name))hand=o});
@@ -80,7 +75,7 @@ function mk(col,modelScene=A.scene,isEnemy=false){
  try{const ml=new T.MTLLoader();ml.setPath('./');ml.load('AssaultRifle_1.mtl',mats=>{mats.preload();const ol=new T.OBJLoader();ol.setMaterials(mats);ol.setPath('./');ol.load('AssaultRifle_1.obj',obj=>{obj.rotation.y=Math.PI/2;obj.updateMatrixWorld(true);const bb=new T.Box3().setFromObject(obj),center=bb.getCenter(new T.Vector3());obj.position.sub(center);obj.scale.setScalar(.55);obj.position.z-=.72;obj.position.y-=.025;obj.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;o.frustumCulled=true}});gun.children.forEach(o=>{if(o!==flash)o.visible=false});gun.add(obj)},undefined,e=>console.warn('OBJ rifle load failed; fallback remains active',e))},undefined,e=>console.warn('MTL rifle load failed; fallback remains active',e))}catch(e){console.warn('Rifle loader unavailable; fallback remains active',e)}
  return{g,mixer,bodyMixer,body,bodyActs,bodyFallback,bodyCur:null,procBones,acts,cur:null,lock:0,pos:g.position,vy:0,hp:100,dead:false,kills:0,face:0,gun,flash,ft:0,next:0,los:false,losT:0,seen:0,sT:0,sd:1,wander:0,wx:0,wz:0,ammo:30,rl:0,respawn:0,crouch:false}}
 function camo(p){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=p[0];x.fillRect(0,0,256,256);for(let i=0;i<80;i++){x.fillStyle=p[1+i%3];x.beginPath();x.ellipse(Math.random()*256,Math.random()*256,10+Math.random()*28,6+Math.random()*16,Math.random()*3,0,6.3);x.fill()}const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.encoding=T.sRGBEncoding;t.flipY=false;return t}
-const P=mk(['#2f5d8a','#1f3f66','#4a7fb0','#17304d'],A.scene,false),B=mk(['#d94b91','#5e1f42','#f17ab5','#3d1730'],CHAR.scene,true);
+const P=mk(['#2f5d8a','#1f3f66','#4a7fb0','#17304d']),B=mk(['#d94b91','#5e1f42','#f17ab5','#3d1730']);
 function playBody(c,n,f=.18){if(!c.bodyActs)return;const q=n.toLowerCase();let want='';if(q.includes('death'))want='death';else if(q.includes('reload'))want='reload';else if(q.includes('shoot'))want='shoot';else if(q.includes('jump'))want='jump';else if(q.includes('sprint'))want='run';else if(q.includes('jog')||q.includes('crouch')||q.includes('walk'))want='walk';else want='idle';const names=Object.keys(c.bodyActs);let key=names.find(k=>k.toLowerCase().includes(want));if(!key&&want==='run')key=names.find(k=>/run|sprint|walk|jog/i.test(k));if(!key&&want==='walk')key=names.find(k=>/walk|jog|run|sprint/i.test(k));if(!key)key=names.find(k=>/idle|neutral|stand/i.test(k))||names[0];const a=key&&c.bodyActs[key];if(!a||c.bodyCur===key)return;if(c.bodyCur&&c.bodyActs[c.bodyCur])c.bodyActs[c.bodyCur].fadeOut(f);a.reset().fadeIn(f).play();c.bodyCur=key}function play(c,n,f=.15){if(c.cur===n){playBody(c,n,f);return}const a=c.acts[n];if(a){a.reset().fadeIn(f).play();if(c.cur&&c.acts[c.cur])c.acts[c.cur].fadeOut(f);c.cur=n}playBody(c,n,f)}
 function once(c,n,now){const a=c.acts[n];if(!a)return;playBody(c,n,.08);c.anc=(c.anc|0)+1;if(c.cur&&c.cur!==n)c.acts[c.cur].fadeOut(.08);a.reset().fadeIn(.08).play();c.cur=n;c.lock=n==='Death01'?1e9:now+a.getClip().duration}
 function proceduralPose(c,now,moving){if(!window.PlayerAnimations)return;window.PlayerAnimations.pose({bones:c.procBones},now,moving,{run:c===P&&!!keys.ShiftLeft,crouch:c===P&&P.crouch,jump:c===P&&!!c.air,shoot:c===P&&(fire||now-lastFire<.22),reload:c===P&&!!P.rl,dead:c.dead,enemy:c===B})}
@@ -96,10 +91,7 @@ function spawn(c,o){for(let i=0;i<80;i++){const x=(Math.random()*2-1)*S*.8,z=(Ma
 function respawn(c,o){c.dead=false;c.hp=100;c.ammo=30;c.rl=0;c.lock=0;c.acts.Death01.stop();c.cur=null;spawn(c,o);play(c,'Pistol_Aim_Neutral')}
 const sph=(o,d,c,r)=>{const l=V2.subVectors(c,o),t=l.dot(d);if(t<0)return null;const q=l.lengthSq()-t*t;return q>r*r?null:t-Math.sqrt(r*r-q)};
 function hitChar(o,d,c){let b=null;for(const[y,r,m]of[[1.65,.22,2],[1.2,.35,1],[.6,.38,1]]){const t=sph(o,d,new T.Vector3(c.pos.x,c.pos.y+y,c.pos.z),r);if(t!==null&&(!b||t<b.t))b={t,m}}return b}
-const fx=[];
-let audioCtx=null;
-function sound(type){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;if(!audioCtx)audioCtx=new AC();if(audioCtx.state==='suspended')audioCtx.resume();const c=audioCtx,t=c.currentTime,g=c.createGain();g.connect(c.destination);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(type==='gun'?.22:type==='hit'?.13:.09,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+(type==='gun'?.12:type==='reload'?.22:.16));if(type==='gun'||type==='hit'){const o=c.createOscillator();o.type=type==='gun'?'sawtooth':'triangle';o.frequency.setValueAtTime(type==='gun'?145:520,t);o.frequency.exponentialRampToValueAtTime(type==='gun'?42:180,t+(type==='gun'?.11:.14));o.connect(g);o.start(t);o.stop(t+.18);if(type==='gun'){const n=c.createBufferSource(),buf=c.createBuffer(1,Math.floor(c.sampleRate*.055),c.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const ng=c.createGain();ng.gain.setValueAtTime(.12,t);ng.gain.exponentialRampToValueAtTime(.001,t+.055);n.buffer=buf;n.connect(ng);ng.connect(c.destination);n.start(t)}}else{const o=c.createOscillator();o.type='square';o.frequency.setValueAtTime(type==='jump'?220:type==='reload'?700:320,t);o.frequency.exponentialRampToValueAtTime(type==='jump'?420:type==='reload'?260:180,t+.13);o.connect(g);o.start(t);o.stop(t+.24)}}catch(e){}}
-function tracer(a,b){const l=new T.Line(new T.BufferGeometry().setFromPoints([a,b]),new T.LineBasicMaterial({color:0xffe27a}));sc.add(l);fx.push({l,t:.07})}
+const fx=[];function tracer(a,b){const l=new T.Line(new T.BufferGeometry().setFromPoints([a,b]),new T.LineBasicMaterial({color:0xffe27a}));sc.add(l);fx.push({l,t:.07})}
 const gp=c=>c.gun.getWorldPosition(new T.Vector3());
 let yaw=0,pitch=0,fire=false,ads=false,started=false,paused=false,over=false,locked=false,lastFire=-9,hm=0,hurt=0,offlineMode=false;const keys={};
 const msg=t=>{$('msg').textContent=t;clearTimeout(msg.h);msg.h=setTimeout(()=>$('msg').textContent='',2500)};
@@ -108,27 +100,27 @@ const scores=()=>{$('s1').textContent=P.kills;$('s2').textContent=B.kills};
 const lockPtr=()=>{if(touch)return;try{const p=R.domElement.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}};
 function endGame(win){over=true;fire=ads=false;$('t').textContent=win?'YOU WIN 🏆':'YOU LOSE';$('d').textContent='Final score '+P.kills+' - '+B.kills;$('d').style.display='';$('lob').style.display='none';$('lv').style.display='';$('st').textContent='';$('go').style.display='';$('go').disabled=false;$('go').textContent='Rematch';$('ov').style.display='flex';document.exitPointerLock&&document.exitPointerLock()}
 const checkWin=()=>{if(over)return;if(P.kills>=WIN)endGame(true);else if(B.kills>=WIN)endGame(false)};
-function die(now){P.dead=true;P.hp=0;P.respawn=now+3;sound('hit');once(P,'Death01',now);B.kills++;scores();msg('Enemy eliminated you');if(!offlineMode)net.ev({die:1});checkWin()}
-function pFire(now){P.ammo--;P.next=now+.11;P.ft=.05;P.recoil=1;P.flash.visible=true;lastFire=now;sound('gun');
+function die(now){P.dead=true;P.hp=0;P.respawn=now+3;once(P,'Death01',now);B.kills++;scores();msg('Enemy eliminated you');if(!offlineMode)net.ev({die:1});checkWin()}
+function pFire(now){P.ammo--;P.next=now+.11;P.ft=.05;P.recoil=1;P.flash.visible=true;lastFire=now;
   const o=cam.position,cp=Math.cos(pitch);D.set(-Math.sin(yaw)*cp,Math.sin(pitch),-Math.cos(yaw)*cp);
   const mh=hitMap(o,D,250),md=mh?mh.distance:250,h=(B.dead||!B.g.visible)?null:hitChar(o,D,B);let e=o.clone().addScaledVector(D,md),dm=0;
   if(h&&h.t<md){e=o.clone().addScaledVector(D,h.t);dm=20*h.m;hm=.15;$('cross').className='h'}
-  const a=gp(P);tracer(a,e);if(offlineMode){if(dm>0&&!B.dead){B.hp-=dm;B.flash.visible=true;B.ft=.05;if(B.hp<=0){B.hp=0;B.dead=true;B.respawn=now+2.5;sound('hit');once(B,'Death01',now);P.kills++;scores();msg('Enemy eliminated');checkWin()}}}else net.ev({ax:r2(a.x),ay:r2(a.y),az:r2(a.z),bx:r2(e.x),by:r2(e.y),bz:r2(e.z),dm:dm})}
+  const a=gp(P);tracer(a,e);if(offlineMode){if(dm>0&&!B.dead){B.hp-=dm;B.flash.visible=true;B.ft=.05;if(B.hp<=0){B.hp=0;B.dead=true;B.respawn=now+2.5;once(B,'Death01',now);P.kills++;scores();msg('Enemy eliminated');checkWin()}}}else net.ev({ax:r2(a.x),ay:r2(a.y),az:r2(a.z),bx:r2(e.x),by:r2(e.y),bz:r2(e.z),dm:dm})}
 function onHit(v){
-  if(v.ax!==undefined){sound('gun');tracer(new T.Vector3(v.ax,v.ay,v.az),new T.Vector3(v.bx,v.by,v.bz));B.flash.visible=true;B.ft=.05}
+  if(v.ax!==undefined){tracer(new T.Vector3(v.ax,v.ay,v.az),new T.Vector3(v.bx,v.by,v.bz));B.flash.visible=true;B.ft=.05}
   const now=nowS();
   if(v.dm>0&&started&&!over&&!P.dead&&net.oppReady){P.hp-=v.dm;hurt=.7;if(P.hp<=0)die(now)}
-  if(v.die&&!over){sound('hit');P.kills++;scores();msg('You eliminated the enemy');checkWin()}}
+  if(v.die&&!over){P.kills++;scores();msg('You eliminated the enemy');checkWin()}}
 function pUpdate(dt,now){
  if(P.dead){if(now>P.respawn&&!over)respawn(P,B);return}
  const ix=Math.max(-1,Math.min(1,(keys.KeyD?1:0)-(keys.KeyA?1:0)+joy.x)),iz=Math.max(-1,Math.min(1,(keys.KeyW?1:0)-(keys.KeyS?1:0)+joy.y)),sy=Math.sin(yaw),cy=Math.cos(yaw);
  const mx=-sy*iz+cy*ix,mz=-cy*iz-sy*ix,mv=Math.hypot(ix,iz)>.15;P.crouch=!!keys.KeyC;
  const sp=P.crouch?2.2:(keys.ShiftLeft&&iz>0&&!ads)?7.5:ads?3:4.8;
- if(mv)step(P,mx,mz,sp,dt);if(keys.Space&&!P.air&&P.vy<=0){P.vy=7.5;sound('jump')}vert(P,dt);
+ if(mv)step(P,mx,mz,sp,dt);if(keys.Space&&!P.air&&P.vy<=0)P.vy=7.5;vert(P,dt);
  const aim=fire||ads||now-lastFire<.7;if(aim)P.face=ang(P.face,Math.atan2(-sy,-cy),Math.min(1,dt*14));else if(mv)P.face=ang(P.face,Math.atan2(mx,mz),Math.min(1,dt*12));P.g.rotation.y=P.face;
  if(P.rl&&now>=P.rl){P.rl=0;P.ammo=30}
- if(keys.KeyR&&!P.rl&&P.ammo<30){P.rl=now+1.8;sound('reload');once(P,'Pistol_Reload',now)}
- if(fire&&!P.rl&&now>P.next){if(P.ammo>0){pFire(now);if(!mv)once(P,'Pistol_Shoot',now)}else{P.rl=now+1.8;sound('reload');once(P,'Pistol_Reload',now)}}
+ if(keys.KeyR&&!P.rl&&P.ammo<30){P.rl=now+1.8;once(P,'Pistol_Reload',now)}
+ if(fire&&!P.rl&&now>P.next){if(P.ammo>0){pFire(now);if(!mv)once(P,'Pistol_Shoot',now)}else{P.rl=now+1.8;once(P,'Pistol_Reload',now)}}
  loco(P,P.air?'Jump_Loop':mv?(P.crouch?'Crouch_Fwd_Loop':sp>6?'Sprint_Loop':'Jog_Fwd_Loop'):'Pistol_Aim_Neutral',now)}
 const FB={apiKey:"AIzaSyBxA1e2V-aQuWe2an0LFjAMqeQBM2-J58k",authDomain:"v1game-41650.firebaseapp.com",databaseURL:"https://v1game-41650-default-rtdb.firebaseio.com",projectId:"v1game-41650",storageBucket:"v1game-41650.firebasestorage.app",messagingSenderId:"308133375646",appId:"1:308133375646:android:6637dceeb8476121b3558f"};
 const ui={
@@ -216,8 +208,8 @@ function offlineBot(dt,now){
  const desired=Math.atan2(dx,dz);B.face=ang(B.face,desired,Math.min(1,dt*4));B.g.rotation.y=B.face;
  if(dist>5){step(B,dx/dist,dz/dist,dist>13?3.5:1.6,dt);vert(B,dt);loco(B,dist>13?'Jog_Fwd_Loop':'Pistol_Aim_Neutral',now)}else loco(B,'Pistol_Aim_Neutral',now);
  B.pos.y=Math.max(B.pos.y,ground(B.pos.x,B.pos.z,B.pos.y+1.3)??B.pos.y);
- if(dist<22&&now>(B.aiNext||0)&&Math.abs(ang(B.face,desired,1))<.35){B.aiNext=now+.65+Math.random()*.7;B.ft=.05;B.flash.visible=true;sound('gun');
-  const chance=Math.max(.18,.58-dist*.018);if(Math.random()<chance){sound('hit');P.hp-=20;hurt=.5;if(P.hp<=0)die(now)}}
+ if(dist<22&&now>(B.aiNext||0)&&Math.abs(ang(B.face,desired,1))<.35){B.aiNext=now+.65+Math.random()*.7;B.ft=.05;B.flash.visible=true;
+  const chance=Math.max(.18,.58-dist*.018);if(Math.random()<chance){P.hp-=20;hurt=.5;if(P.hp<=0)die(now)}}
 }
 function startOffline(){offlineMode=true;net.room={offline:true};net.oppReady=true;net.ready=true;net.slot=0;net.rm=false;B.g.visible=true;B.init=true;B.dead=false;B.hp=100;B.kills=0;P.kills=0;scores();spawn(P,null);spawn(B,P);B.tx=B.pos.x;B.ty=B.pos.y;B.tz=B.pos.z;B.tf=B.face;B.aiNext=nowS()+1;play(P,'Pistol_Aim_Neutral');play(B,'Pistol_Aim_Neutral');started=true;paused=false;over=false;$('lob').style.display='none';$('lv').style.display='';$('st').textContent='Offline Practice — internet ki zaroorat nahi';$('ov').style.display='none';if(touch){const e=document.documentElement;(e.requestFullscreen?e.requestFullscreen():Promise.reject()).then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}else lockPtr()}
 $('of').onclick=startOffline;
