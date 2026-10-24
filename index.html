@@ -24,7 +24,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),rnd=(a,b)=>a+Math.random()*(b-a),
 const names=clips=>{const n=clips.map(c=>c.name);console.log('GLB animation clips:',n);return n};
 function pick(clips,patterns,avoid=[]){for(const p of patterns){const c=clips.find(x=>p.test(x.name)&&!avoid.some(a=>a.test(x.name)));if(c)return c}return null}
 function makeCharacter(color){
- const root=THREE.SkeletonUtils.clone(base.scene);root.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false;if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];const out=mats.map(m=>{const n=m.clone();if(n.color)n.color.multiply(new THREE.Color(color));return n});o.material=Array.isArray(o.material)?out:out[0]}}});
+ const root=THREE.SkeletonUtils.clone(base.scene);root.traverse(o=>{if(/gun|rifle|weapon|assault.?rifle|firearm|pistol/i.test(o.name||'')){o.visible=false;o.traverse?.(c=>{c.visible=false})}if(o.isMesh){o.frustumCulled=false;o.castShadow=false;o.receiveShadow=false;if(o.material){const mats=Array.isArray(o.material)?o.material:[o.material];const out=mats.map(m=>{const n=m.clone();if(n.color)n.color.multiply(new THREE.Color(color));return n});o.material=Array.isArray(o.material)?out:out[0]}}});
  const group=new THREE.Group();group.add(root);scene.add(group);
  const mixer=new THREE.AnimationMixer(root),actions=new Map(),clips=base.animations;
  for(const clip of clips){const action=mixer.clipAction(clip);actions.set(clip.name,action)}
