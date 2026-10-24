@@ -39,7 +39,7 @@ const rs=()=>{document.body.classList.toggle('r',rot());R.setSize(VW(),VH());cam
 const L=new T.GLTFLoader(),load=url=>new Promise((resolve,reject)=>L.load(url,g=>resolve(g),undefined,reject));
 Promise.all([load('player_rig.glb'),load('virtual_studio.glb'),load('human_body_idle_animated.glb')]).then(init).catch(e=>{$('go').textContent='Load error: '+e.message+' (check that all GLB files are beside index.html)'});
 function init([A,M,CHAR]){
-const map=M.scene;map.rotation.x=-Math.PI/2;map.scale.setScalar(3);map.position.y=4.5;sc.add(map);map.updateMatrixWorld(true);
+const map=M.scene;map.scale.setScalar(3);map.position.y=0;sc.add(map);map.updateMatrixWorld(true);
 const meshes=[],groundMeshes=[];map.traverse(o=>{if(o.isMesh){meshes.push(o);o.castShadow=true;o.receiveShadow=true;if(o.parent&&o.parent.name==='Cube.001')groundMeshes.push(o)}});
 const rc=new T.Raycaster(),DN=new T.Vector3(0,-1,0),V=new T.Vector3(),V2=new T.Vector3(),D=new T.Vector3();
 const hitMap=(o,d,far)=>{rc.set(o,d);rc.far=far;return rc.intersectObjects(meshes,false)[0]||null};
