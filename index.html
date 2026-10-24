@@ -30,7 +30,7 @@ body.t #hp{bottom:auto;top:14px;left:14px;width:140px}body.t #score{font-size:16
 <script>
 (()=>{
 const touch="ontouchstart" in window||navigator.maxTouchPoints>0,$=id=>document.getElementById(id),S=20,WIN=10,T=THREE;
-const R=new T.WebGLRenderer({antialias:true});R.setPixelRatio(Math.min(devicePixelRatio,2));R.outputEncoding=T.sRGBEncoding;document.body.prepend(R.domElement);
+const lowMem=(navigator.deviceMemory&&navigator.deviceMemory<=4)||((navigator.hardwareConcurrency||4)<=4);const R=new T.WebGLRenderer({antialias:!lowMem,powerPreference:'high-performance',alpha:false,stencil:false,depth:true});R.setPixelRatio(Math.min(devicePixelRatio,lowMem?1:1.25));R.outputEncoding=T.sRGBEncoding;R.shadowMap.enabled=false;document.body.prepend(R.domElement);
 const sc=new T.Scene();sc.background=new T.Color(0x9cc4e8);sc.fog=new T.Fog(0x9cc4e8,60,230);
 const cam=new T.PerspectiveCamera(70,1,.1,400);cam.rotation.order='YXZ';
 sc.add(new T.HemisphereLight(0xffffff,0x667766,1));const sun=new T.DirectionalLight(0xffffff,1.1);sun.position.set(40,80,30);sc.add(sun);
@@ -50,20 +50,20 @@ const ONCE=new Set(['Pistol_Reload','Pistol_Shoot','Death01']);
 function mk(col){
  const root=THREE.SkeletonUtils.clone(A.scene);
  // Keep the original rig as an invisible animation/weapon anchor; the HTML no longer embeds it.
- root.traverse(o=>{if(o.isMesh){o.visible=false;o.frustumCulled=false}});
+ root.traverse(o=>{if(o.isMesh){o.visible=false;o.frustumCulled=true;o.castShadow=false;o.receiveShadow=false}});
  const body=THREE.SkeletonUtils.clone(CHAR.scene);
- body.traverse(o=>{if(o.isMesh){o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;const mats=Array.isArray(o.material)?o.material:[o.material];o.material=Array.isArray(o.material)?mats.map(m=>{const n=m.clone();n.color.set(col[0]);n.roughness=.8;return n}):(()=>{const n=o.material.clone();n.color.set(col[0]);n.roughness=.8;return n})()}});
+ body.traverse(o=>{if(o.isMesh){o.frustumCulled=true;o.castShadow=false;o.receiveShadow=false;const mats=Array.isArray(o.material)?o.material:[o.material];o.material=Array.isArray(o.material)?mats.map(m=>{const n=m.clone();n.color.set(col[0]);n.roughness=.8;return n}):(()=>{const n=o.material.clone();n.color.set(col[0]);n.roughness=.8;return n})()}});
  const g=new T.Group();g.add(root);g.add(body);sc.add(g);
  const mixer=new T.AnimationMixer(root),acts={};
  A.animations.forEach(c=>{const a=mixer.clipAction(c);if(ONCE.has(c.name)){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}acts[c.name]=a});
- const bodyMixer=new T.AnimationMixer(body);CHAR.animations.forEach(c=>bodyMixer.clipAction(c).play());
+ const bodyMixer=new T.AnimationMixer(body),bodyActs={};CHAR.animations.forEach(c=>{bodyActs[c.name]=bodyMixer.clipAction(c)});const bodyFallback=CHAR.animations[0]&&bodyActs[CHAR.animations[0].name];if(bodyFallback)bodyFallback.play();
  let hand=null;root.traverse(o=>{if(o.isBone&&/hand\.?R$/.test(o.name))hand=o});
  const gun=new T.Mesh(new T.BoxGeometry(.05,.5,.09),new T.MeshStandardMaterial({color:0x222222}));gun.position.y=.18;
  const flash=new T.Mesh(new T.SphereGeometry(.07),new T.MeshBasicMaterial({color:0xffdd55}));flash.position.y=.33;flash.visible=false;gun.add(flash);(hand||g).add(gun);
- return{g,mixer,bodyMixer,body,acts,cur:null,lock:0,pos:g.position,vy:0,hp:100,dead:false,kills:0,face:0,gun,flash,ft:0,next:0,los:false,losT:0,seen:0,sT:0,sd:1,wander:0,wx:0,wz:0,ammo:30,rl:0,respawn:0,crouch:false}}
+ return{g,mixer,bodyMixer,body,bodyActs,bodyFallback,bodyCur:null,acts,cur:null,lock:0,pos:g.position,vy:0,hp:100,dead:false,kills:0,face:0,gun,flash,ft:0,next:0,los:false,losT:0,seen:0,sT:0,sd:1,wander:0,wx:0,wz:0,ammo:30,rl:0,respawn:0,crouch:false}}
 function camo(p){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=p[0];x.fillRect(0,0,256,256);for(let i=0;i<80;i++){x.fillStyle=p[1+i%3];x.beginPath();x.ellipse(Math.random()*256,Math.random()*256,10+Math.random()*28,6+Math.random()*16,Math.random()*3,0,6.3);x.fill()}const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.encoding=T.sRGBEncoding;t.flipY=false;return t}
 const P=mk(['#2f5d8a','#1f3f66','#4a7fb0','#17304d']),B=mk(['#8a2f2f','#5e1f1f','#b04a4a','#3d1717']);
-function play(c,n,f=.15){if(c.cur===n)return;const a=c.acts[n];if(!a)return;a.reset().fadeIn(f).play();if(c.cur)c.acts[c.cur].fadeOut(f);c.cur=n}
+function playBody(c,n,f=.18){if(!c.bodyActs)return;const q=n.toLowerCase();let want='';if(q.includes('death'))want='death';else if(q.includes('reload'))want='reload';else if(q.includes('shoot'))want='shoot';else if(q.includes('jump'))want='jump';else if(q.includes('sprint'))want='run';else if(q.includes('jog')||q.includes('crouch')||q.includes('walk'))want='walk';else want='idle';const names=Object.keys(c.bodyActs);let key=names.find(k=>k.toLowerCase().includes(want));if(!key&&want==='run')key=names.find(k=>/run|sprint|walk|jog/i.test(k));if(!key&&want==='walk')key=names.find(k=>/walk|jog|run|sprint/i.test(k));if(!key)key=names.find(k=>/idle|neutral|stand/i.test(k))||names[0];const a=key&&c.bodyActs[key];if(!a||c.bodyCur===key)return;if(c.bodyCur&&c.bodyActs[c.bodyCur])c.bodyActs[c.bodyCur].fadeOut(f);a.reset().fadeIn(f).play();c.bodyCur=key}function play(c,n,f=.15){if(c.cur===n){playBody(c,n,f);return}const a=c.acts[n];if(a){a.reset().fadeIn(f).play();if(c.cur&&c.acts[c.cur])c.acts[c.cur].fadeOut(f);c.cur=n}playBody(c,n,f)}
 function once(c,n,now){const a=c.acts[n];if(!a)return;c.anc=(c.anc|0)+1;if(c.cur&&c.cur!==n)c.acts[c.cur].fadeOut(.08);a.reset().fadeIn(.08).play();c.cur=n;c.lock=n==='Death01'?1e9:now+a.getClip().duration}
 const loco=(c,n,now)=>{if(now>=c.lock)play(c,n)};
 const ang=(a,b,t)=>a+((((b-a+Math.PI)%6.2832)+6.2832)%6.2832-Math.PI)*t;
@@ -237,7 +237,7 @@ let last=performance.now()/1e3;
   const wt=started&&!over&&!!net.room&&!net.oppReady;if(wt){$('msg').textContent='Opponent ready ho raha hai…';loop.w=1}else if(loop.w){loop.w=0;$('msg').textContent=''}
   if(run){pUpdate(dt,now);if(offlineMode)offlineBot(dt,now);else rUpdate(dt,now)}
   net.tick(now);
- P.mixer.update(dt);B.mixer.update(dt);P.bodyMixer.update(dt);B.bodyMixer.update(dt);
+ P.mixer.update(dt);B.mixer.update(dt);P.bodyMixer.update(dt);B.bodyMixer.update(dt);if(lowMem&&now-(loop.lastDraw||0)<1/30)return;loop.lastDraw=now;
  for(const c of[P,B])if(c.ft>0){c.ft-=dt;if(c.ft<=0)c.flash.visible=false}
  for(let i=fx.length-1;i>=0;i--){fx[i].t-=dt||.016;if(fx[i].t<=0){sc.remove(fx[i].l);fx[i].l.geometry.dispose();fx.splice(i,1)}}
  camUpdate();hm-=dt;if(hm<=0)$('cross').className='';hurt=Math.max(0,hurt-dt);$('hurt').style.opacity=hurt;
