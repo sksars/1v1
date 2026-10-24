@@ -100,17 +100,17 @@ const scores=()=>{$('s1').textContent=P.kills;$('s2').textContent=B.kills};
 const lockPtr=()=>{if(touch)return;try{const p=R.domElement.requestPointerLock();p&&p.catch&&p.catch(()=>{})}catch(e){}};
 function endGame(win){over=true;fire=ads=false;$('t').textContent=win?'YOU WIN 🏆':'YOU LOSE';$('d').textContent='Final score '+P.kills+' - '+B.kills;$('d').style.display='';$('lob').style.display='none';$('lv').style.display='';$('st').textContent='';$('go').style.display='';$('go').disabled=false;$('go').textContent='Rematch';$('ov').style.display='flex';document.exitPointerLock&&document.exitPointerLock()}
 const checkWin=()=>{if(over)return;if(P.kills>=WIN)endGame(true);else if(B.kills>=WIN)endGame(false)};
-function die(now){P.dead=true;P.hp=0;P.respawn=now+3;once(P,'Death01',now);B.kills++;scores();msg('Enemy eliminated you');if(!offlineMode)net.ev({die:1});checkWin()}
-function pFire(now){P.ammo--;P.next=now+.11;P.ft=.05;P.recoil=1;P.flash.visible=true;lastFire=now;
+function die(now){P.dead=true;P.hp=0;P.respawn=now+3;sound('hit');once(P,'Death01',now);B.kills++;scores();msg('Enemy eliminated you');if(!offlineMode)net.ev({die:1});checkWin()}
+function pFire(now){P.ammo--;P.next=now+.11;P.ft=.05;P.recoil=1;P.flash.visible=true;lastFire=now;sound('gun');
   const o=cam.position,cp=Math.cos(pitch);D.set(-Math.sin(yaw)*cp,Math.sin(pitch),-Math.cos(yaw)*cp);
   const mh=hitMap(o,D,250),md=mh?mh.distance:250,h=(B.dead||!B.g.visible)?null:hitChar(o,D,B);let e=o.clone().addScaledVector(D,md),dm=0;
   if(h&&h.t<md){e=o.clone().addScaledVector(D,h.t);dm=20*h.m;hm=.15;$('cross').className='h'}
-  const a=gp(P);tracer(a,e);if(offlineMode){if(dm>0&&!B.dead){B.hp-=dm;B.flash.visible=true;B.ft=.05;if(B.hp<=0){B.hp=0;B.dead=true;B.respawn=now+2.5;once(B,'Death01',now);P.kills++;scores();msg('Enemy eliminated');checkWin()}}}else net.ev({ax:r2(a.x),ay:r2(a.y),az:r2(a.z),bx:r2(e.x),by:r2(e.y),bz:r2(e.z),dm:dm})}
+  const a=gp(P);tracer(a,e);if(offlineMode){if(dm>0&&!B.dead){B.hp-=dm;B.flash.visible=true;B.ft=.05;if(B.hp<=0){B.hp=0;B.dead=true;B.respawn=now+2.5;sound('hit');once(B,'Death01',now);P.kills++;scores();msg('Enemy eliminated');checkWin()}}}else net.ev({ax:r2(a.x),ay:r2(a.y),az:r2(a.z),bx:r2(e.x),by:r2(e.y),bz:r2(e.z),dm:dm})}
 function onHit(v){
   if(v.ax!==undefined){tracer(new T.Vector3(v.ax,v.ay,v.az),new T.Vector3(v.bx,v.by,v.bz));B.flash.visible=true;B.ft=.05}
   const now=nowS();
   if(v.dm>0&&started&&!over&&!P.dead&&net.oppReady){P.hp-=v.dm;hurt=.7;if(P.hp<=0)die(now)}
-  if(v.die&&!over){P.kills++;scores();msg('You eliminated the enemy');checkWin()}}
+  if(v.die&&!over){sound('hit');P.kills++;scores();msg('You eliminated the enemy');checkWin()}}
 function pUpdate(dt,now){
  if(P.dead){if(now>P.respawn&&!over)respawn(P,B);return}
  const ix=Math.max(-1,Math.min(1,(keys.KeyD?1:0)-(keys.KeyA?1:0)+joy.x)),iz=Math.max(-1,Math.min(1,(keys.KeyW?1:0)-(keys.KeyS?1:0)+joy.y)),sy=Math.sin(yaw),cy=Math.cos(yaw);
@@ -119,8 +119,8 @@ function pUpdate(dt,now){
  if(mv)step(P,mx,mz,sp,dt);if(keys.Space&&!P.air&&P.vy<=0)P.vy=7.5;vert(P,dt);
  const aim=fire||ads||now-lastFire<.7;if(aim)P.face=ang(P.face,Math.atan2(-sy,-cy),Math.min(1,dt*14));else if(mv)P.face=ang(P.face,Math.atan2(mx,mz),Math.min(1,dt*12));P.g.rotation.y=P.face;
  if(P.rl&&now>=P.rl){P.rl=0;P.ammo=30}
- if(keys.KeyR&&!P.rl&&P.ammo<30){P.rl=now+1.8;once(P,'Pistol_Reload',now)}
- if(fire&&!P.rl&&now>P.next){if(P.ammo>0){pFire(now);if(!mv)once(P,'Pistol_Shoot',now)}else{P.rl=now+1.8;once(P,'Pistol_Reload',now)}}
+ if(keys.KeyR&&!P.rl&&P.ammo<30){P.rl=now+1.8;sound('reload');once(P,'Pistol_Reload',now)}
+ if(fire&&!P.rl&&now>P.next){if(P.ammo>0){pFire(now);if(!mv)once(P,'Pistol_Shoot',now)}else{P.rl=now+1.8;sound('reload');once(P,'Pistol_Reload',now)}}
  loco(P,P.air?'Jump_Loop':mv?(P.crouch?'Crouch_Fwd_Loop':sp>6?'Sprint_Loop':'Jog_Fwd_Loop'):'Pistol_Aim_Neutral',now)}
 const FB={apiKey:"AIzaSyBxA1e2V-aQuWe2an0LFjAMqeQBM2-J58k",authDomain:"v1game-41650.firebaseapp.com",databaseURL:"https://v1game-41650-default-rtdb.firebaseio.com",projectId:"v1game-41650",storageBucket:"v1game-41650.firebasestorage.app",messagingSenderId:"308133375646",appId:"1:308133375646:android:6637dceeb8476121b3558f"};
 const ui={
@@ -209,7 +209,7 @@ function offlineBot(dt,now){
  if(dist>5){step(B,dx/dist,dz/dist,dist>13?3.5:1.6,dt);vert(B,dt);loco(B,dist>13?'Jog_Fwd_Loop':'Pistol_Aim_Neutral',now)}else loco(B,'Pistol_Aim_Neutral',now);
  B.pos.y=Math.max(B.pos.y,ground(B.pos.x,B.pos.z,B.pos.y+1.3)??B.pos.y);
  if(dist<22&&now>(B.aiNext||0)&&Math.abs(ang(B.face,desired,1))<.35){B.aiNext=now+.65+Math.random()*.7;B.ft=.05;B.flash.visible=true;
-  const chance=Math.max(.18,.58-dist*.018);if(Math.random()<chance){P.hp-=20;hurt=.5;if(P.hp<=0)die(now)}}
+  const chance=Math.max(.18,.58-dist*.018);if(Math.random()<chance){sound('hit');P.hp-=20;hurt=.5;if(P.hp<=0)die(now)}}
 }
 function startOffline(){offlineMode=true;net.room={offline:true};net.oppReady=true;net.ready=true;net.slot=0;net.rm=false;B.g.visible=true;B.init=true;B.dead=false;B.hp=100;B.kills=0;P.kills=0;scores();spawn(P,null);spawn(B,P);B.tx=B.pos.x;B.ty=B.pos.y;B.tz=B.pos.z;B.tf=B.face;B.aiNext=nowS()+1;play(P,'Pistol_Aim_Neutral');play(B,'Pistol_Aim_Neutral');started=true;paused=false;over=false;$('lob').style.display='none';$('lv').style.display='';$('st').textContent='Offline Practice — internet ki zaroorat nahi';$('ov').style.display='none';if(touch){const e=document.documentElement;(e.requestFullscreen?e.requestFullscreen():Promise.reject()).then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{})}else lockPtr()}
 $('of').onclick=startOffline;
