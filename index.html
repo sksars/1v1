@@ -120,7 +120,7 @@ function pUpdate(dt,now){
  const aim=fire||ads||now-lastFire<.7;if(aim)P.face=ang(P.face,Math.atan2(-sy,-cy),Math.min(1,dt*14));else if(mv)P.face=ang(P.face,Math.atan2(mx,mz),Math.min(1,dt*12));P.g.rotation.y=P.face;
  if(P.rl&&now>=P.rl){P.rl=0;P.ammo=30}
  if(keys.KeyR&&!P.rl&&P.ammo<30){P.rl=now+1.8;once(P,'Pistol_Reload',now)}
- if(fire&&!P.rl&&now>P.next){if(P.ammo>0){pFire(now);if(!mv)once(P,'Pistol_Shoot',now)}else{P.rl=now+1.8;once(P,'Pistol_Reload',now)}}
+ if(fire&&!P.rl&&now>P.next){if(P.ammo>0){pFire(now);if(!mv)play(P,'Pistol_Aim_Neutral')}else{P.rl=now+1.8;once(P,'Pistol_Reload',now)}}
  loco(P,P.air?'Jump_Loop':mv?(P.crouch?'Crouch_Fwd_Loop':sp>6?'Sprint_Loop':'Jog_Fwd_Loop'):'Pistol_Aim_Neutral',now)}
 const FB={apiKey:"AIzaSyBxA1e2V-aQuWe2an0LFjAMqeQBM2-J58k",authDomain:"v1game-41650.firebaseapp.com",databaseURL:"https://v1game-41650-default-rtdb.firebaseio.com",projectId:"v1game-41650",storageBucket:"v1game-41650.firebasestorage.app",messagingSenderId:"308133375646",appId:"1:308133375646:android:6637dceeb8476121b3558f"};
 const ui={
@@ -253,9 +253,9 @@ let last=performance.now()/1e3;
   net.tick(now);
  if(lowMem&&now-(loop.lastDraw||0)<1/30)return;loop.lastDraw=now;
  for(const c of[P,B]){if(c.ft>0){c.ft-=dt;if(c.ft<=0)c.flash.visible=false}c.recoil=Math.max(0,(c.recoil||0)-dt*5);const moving=Math.hypot(c.pos.x-(c.prevX??c.pos.x),c.pos.z-(c.prevZ??c.pos.z))>.002;c.prevX=c.pos.x;c.prevZ=c.pos.z;const phase=now*10+(c===B?1.3:0);c.body.position.y=(moving&&started&&!c.dead?Math.abs(Math.sin(phase))*.035:0)-((c.crouch&&c===P)?0.1:0);c.body.rotation.z=(moving&&started&&!c.dead?Math.sin(phase*.5)*.025:0)+(c===P?(c.recoil||0)*.035:0);c.body.rotation.x=(c===P?(c.recoil||0)*-.07:0);c.body.scale.y=(c===P&&P.crouch)? .9:1;}
- // Update imported clips first, then apply a lightweight bone-pose fallback to the SAME rig.
- P.mixer.update(dt);B.mixer.update(dt);P.bodyMixer.update(dt);B.bodyMixer.update(dt);
- for(const c of[P,B]){const moving=Math.hypot(c.pos.x-(c.prevPoseX??c.pos.x),c.pos.z-(c.prevPoseZ??c.pos.z))>.002;c.prevPoseX=c.pos.x;c.prevPoseZ=c.pos.z;proceduralPose(c,now,moving)}
+  // Imported GLB clips alone drive the skeleton; procedural quaternion overrides
+  // fight the animation mixer and cause distorted poses/T-poses.
+  P.mixer.update(dt);B.mixer.update(dt);
  for(let i=fx.length-1;i>=0;i--){fx[i].t-=dt||.016;if(fx[i].t<=0){sc.remove(fx[i].l);fx[i].l.geometry.dispose();fx.splice(i,1)}}
  camUpdate();hm-=dt;if(hm<=0)$('cross').className='';hurt=Math.max(0,hurt-dt);$('hurt').style.opacity=hurt;
  $('hp').firstChild.style.width=Math.max(0,P.hp)+'%';$('ammo').textContent=P.rl?'Reloading…':P.ammo+' / ∞';
