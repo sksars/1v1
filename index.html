@@ -11,7 +11,7 @@
 button{font-size:18px;padding:10px 28px;border:0;border-radius:8px;background:#ffb020;cursor:pointer}#tc,#js{display:none}body.t #tc{display:block}body{touch-action:none}
 #tc .b{position:fixed;width:58px;height:58px;border-radius:50%;background:#fff3;border:2px solid #fff6;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:auto;touch-action:none;z-index:5}
 .b.on{background:#ffb020aa!important}#bf{right:28px;bottom:70px;width:84px!important;height:84px!important;background:#f334!important;font-size:14px!important}#bj{right:130px;bottom:28px}#br{right:200px;bottom:90px}#bc{right:28px;bottom:170px}#ba{right:120px;bottom:150px}#bs{right:210px;bottom:20px}
-#js{position:fixed;width:100px;height:100px;margin:-50px;border-radius:50%;background:#fff2;border:2px solid #fff4;pointer-events:none}#kn{position:absolute;left:30px;top:30px;width:40px;height:40px;border-radius:50%;background:#fff7}
+#js{position:fixed;left:90px;bottom:130px;top:auto;display:none;width:100px;height:100px;margin:-50px;border-radius:50%;background:#fff2;border:2px solid #fff4;pointer-events:none}body.t #js{display:block}#kn{position:absolute;left:30px;top:30px;width:40px;height:40px;border-radius:50%;background:#fff7}
 body.t #hp{bottom:auto;top:14px;left:14px;width:140px}body.t #score{font-size:16px;padding:4px 10px}body.t #ammo{bottom:auto;top:44px;font-size:18px;right:14px}
 #rot{display:none;position:fixed;inset:0;z-index:9;background:#000;align-items:center;justify-content:center;font-size:22px;text-align:center;padding:20px}body.r{position:fixed;top:0;left:0;width:100vh;height:100vw;transform-origin:0 0;transform:translateX(100vw) rotate(90deg);overflow:hidden}
 #lob{display:none;flex-direction:column;gap:10px;align-items:center}.row{display:flex;gap:8px;justify-content:center}input{font:700 22px system-ui,sans-serif;width:110px;padding:9px;border:0;border-radius:8px;text-align:center;text-transform:uppercase;letter-spacing:4px}#st{min-height:24px;font-size:18px;color:#ffd36b;max-width:90vw}#lv{background:#777;color:#fff;display:none}button:disabled{opacity:.55}
@@ -56,6 +56,14 @@ function mk(col){
  // A separate idle-body GLB had a different rig, so its bones stayed in T-pose.
  const body=root;
  root.traverse(o=>{if(o.isMesh){o.visible=true;o.frustumCulled=true;o.castShadow=false;o.receiveShadow=false;const mats=Array.isArray(o.material)?o.material:[o.material];o.material=Array.isArray(o.material)?mats.map(m=>{const n=m.clone();if(n.color)n.color.set(col[0]);if('roughness' in n)n.roughness=.8;return n}):(()=>{const n=o.material.clone();if(n.color)n.color.set(col[0]);if('roughness' in n)n.roughness=.8;return n})()}});
+ if(col[0]==='#d94b91'||col[0]==='#d94b91'.toLowerCase()){
+  let head=null;root.traverse(o=>{if(o.isBone&&/head/i.test(o.name))head=o});
+  if(head){const hair=new T.MeshStandardMaterial({color:0x241b2b,roughness:.88}),tie=new T.MeshStandardMaterial({color:0xff70bd,roughness:.7});
+   const cap=new T.Mesh(new T.SphereGeometry(.145,10,8),hair);cap.scale.set(1.02,.72,1.02);cap.position.set(0,.105,0);cap.castShadow=false;head.add(cap);
+   const pony=new T.Mesh(new T.SphereGeometry(.075,8,7),hair);pony.scale.set(.82,1.65,.9);pony.position.set(0,-.005,-.12);pony.castShadow=false;head.add(pony);
+   const band=new T.Mesh(new T.TorusGeometry(.052,.012,5,10),tie);band.position.set(0,-.035,-.12);band.rotation.x=Math.PI/2;head.add(band);
+  }
+ }
  const g=new T.Group();g.add(root);sc.add(g);
  const mixer=new T.AnimationMixer(root),acts={};
  A.animations.forEach(c=>{const a=mixer.clipAction(c);if(ONCE.has(c.name)){a.setLoop(T.LoopOnce,1);a.clampWhenFinished=true}acts[c.name]=a});
@@ -67,7 +75,7 @@ function mk(col){
  try{const ml=new T.MTLLoader();ml.setPath('./');ml.load('AssaultRifle_1.mtl',mats=>{mats.preload();const ol=new T.OBJLoader();ol.setMaterials(mats);ol.setPath('./');ol.load('AssaultRifle_1.obj',obj=>{obj.rotation.y=Math.PI/2;obj.updateMatrixWorld(true);const bb=new T.Box3().setFromObject(obj),center=bb.getCenter(new T.Vector3());obj.position.sub(center);obj.scale.setScalar(.55);obj.position.z-=.72;obj.position.y-=.025;obj.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=false;o.frustumCulled=true}});gun.children.forEach(o=>{if(o!==flash)o.visible=false});gun.add(obj)},undefined,e=>console.warn('OBJ rifle load failed; fallback remains active',e))},undefined,e=>console.warn('MTL rifle load failed; fallback remains active',e))}catch(e){console.warn('Rifle loader unavailable; fallback remains active',e)}
  return{g,mixer,bodyMixer,body,bodyActs,bodyFallback,bodyCur:null,procBones,acts,cur:null,lock:0,pos:g.position,vy:0,hp:100,dead:false,kills:0,face:0,gun,flash,ft:0,next:0,los:false,losT:0,seen:0,sT:0,sd:1,wander:0,wx:0,wz:0,ammo:30,rl:0,respawn:0,crouch:false}}
 function camo(p){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=p[0];x.fillRect(0,0,256,256);for(let i=0;i<80;i++){x.fillStyle=p[1+i%3];x.beginPath();x.ellipse(Math.random()*256,Math.random()*256,10+Math.random()*28,6+Math.random()*16,Math.random()*3,0,6.3);x.fill()}const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.encoding=T.sRGBEncoding;t.flipY=false;return t}
-const P=mk(['#2f5d8a','#1f3f66','#4a7fb0','#17304d']),B=mk(['#8a2f2f','#5e1f1f','#b04a4a','#3d1717']);
+const P=mk(['#2f5d8a','#1f3f66','#4a7fb0','#17304d']),B=mk(['#d94b91','#5e1f42','#f17ab5','#3d1730']);
 function playBody(c,n,f=.18){if(!c.bodyActs)return;const q=n.toLowerCase();let want='';if(q.includes('death'))want='death';else if(q.includes('reload'))want='reload';else if(q.includes('shoot'))want='shoot';else if(q.includes('jump'))want='jump';else if(q.includes('sprint'))want='run';else if(q.includes('jog')||q.includes('crouch')||q.includes('walk'))want='walk';else want='idle';const names=Object.keys(c.bodyActs);let key=names.find(k=>k.toLowerCase().includes(want));if(!key&&want==='run')key=names.find(k=>/run|sprint|walk|jog/i.test(k));if(!key&&want==='walk')key=names.find(k=>/walk|jog|run|sprint/i.test(k));if(!key)key=names.find(k=>/idle|neutral|stand/i.test(k))||names[0];const a=key&&c.bodyActs[key];if(!a||c.bodyCur===key)return;if(c.bodyCur&&c.bodyActs[c.bodyCur])c.bodyActs[c.bodyCur].fadeOut(f);a.reset().fadeIn(f).play();c.bodyCur=key}function play(c,n,f=.15){if(c.cur===n){playBody(c,n,f);return}const a=c.acts[n];if(a){a.reset().fadeIn(f).play();if(c.cur&&c.acts[c.cur])c.acts[c.cur].fadeOut(f);c.cur=n}playBody(c,n,f)}
 function once(c,n,now){const a=c.acts[n];if(!a)return;playBody(c,n,.08);c.anc=(c.anc|0)+1;if(c.cur&&c.cur!==n)c.acts[c.cur].fadeOut(.08);a.reset().fadeIn(.08).play();c.cur=n;c.lock=n==='Death01'?1e9:now+a.getClip().duration}
 function proceduralPose(c,now,moving){if(!window.PlayerAnimations)return;window.PlayerAnimations.pose({bones:c.procBones},now,moving,{run:c===P&&!!keys.ShiftLeft,crouch:c===P&&P.crouch,jump:c===P&&!!c.air,shoot:c===P&&(fire||now-lastFire<.22),reload:c===P&&!!P.rl,dead:c.dead,enemy:c===B})}
@@ -227,12 +235,12 @@ if(touch){document.body.classList.add('t');
  const pt=t=>rot()?{x:t.clientY,y:innerWidth-t.clientX}:{x:t.clientX,y:t.clientY};
  const inUI=t=>t.target.closest&&t.target.closest('.b,#ov,#rot');
  document.addEventListener('touchstart',e=>{if(!started||paused)return;for(const t of e.changedTouches){if(inUI(t))continue;e.preventDefault();
-  const p=pt(t);if(p.x<VW()/2&&jid===null){jid=t.identifier;jx=p.x;jy=p.y;js.style.cssText='display:block;left:'+jx+'px;top:'+jy+'px'}
+  const p=pt(t);if(p.x<VW()/2&&jid===null){jid=t.identifier;jx=90;jy=VH()-130;}
   else if(lid===null){lid=t.identifier;lx=p.x;ly=p.y}}},{passive:false});
  document.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches){
   if(t.identifier===jid){const p=pt(t);let dx=p.x-jx,dy=p.y-jy;const m=Math.hypot(dx,dy),r=50;if(m>r){dx*=r/m;dy*=r/m}joy.x=dx/r;joy.y=-dy/r;kn.style.transform='translate('+dx+'px,'+dy+'px)'}
   else if(t.identifier===lid){const p=pt(t);yaw-=(p.x-lx)*.006;pitch=Math.max(-.9,Math.min(.9,pitch-(p.y-ly)*.006));lx=p.x;ly=p.y}}},{passive:false});
- const end=e=>{for(const t of e.changedTouches){if(t.identifier===jid){jid=null;joy.x=joy.y=0;js.style.display='none';kn.style.transform=''}if(t.identifier===lid)lid=null}};
+ const end=e=>{for(const t of e.changedTouches){if(t.identifier===jid){jid=null;joy.x=joy.y=0;kn.style.transform=''}if(t.identifier===lid)lid=null;const b=t.target&&t.target.closest&&t.target.closest('.b');if(b){if(b.id==='bf')fire=false;if(b.id==='bj')keys.Space=false;if(b.id==='br')keys.KeyR=false}}};
  document.addEventListener('touchend',end);document.addEventListener('touchcancel',end);
  const bind=(id,dn,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();dn(b)},{passive:false});up&&b.addEventListener('touchend',e=>{e.preventDefault();up(b)})};
  bind('bf',()=>fire=true,()=>fire=false);bind('bj',()=>keys.Space=true,()=>keys.Space=false);bind('br',()=>keys.KeyR=true,()=>keys.KeyR=false);
