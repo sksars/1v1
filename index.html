@@ -19,7 +19,7 @@ body.t #hp{bottom:auto;top:14px;left:14px;width:140px}body.t #score{font-size:16
 <div id="hud"><div id="score">YOU <b id="s1">0</b> · <b id="s2">0</b> ENEMY</div><div id="cross"></div><div id="tag"><i></i></div><div id="hp"><div></div></div><div id="ammo"></div><div id="hurt"></div><div id="msg"></div></div>
 <div id="tc"><div id="js"><div id="kn"></div></div><div class="b" id="bf">FIRE</div><div class="b" id="bj">JUMP</div><div class="b" id="br">RELOAD</div><div class="b" id="bc">CROUCH</div><div class="b" id="ba">AIM</div><div class="b" id="bs">RUN</div></div>
 <div id="rot">📱 Phone ko landscape (aadda) mein ghumao</div>
-<div id="ov"><h1 id="t">1v1 TDM Arena</h1><p id="d">WASD move · Mouse look · Left click shoot · Right click aim · R reload<br>Shift sprint · C crouch · Space jump · First to 10 kills wins<br>(Mobile: left side stick se chalo, right side drag se ghumao)<br>(Mouse lock na chale to Right-click drag se ghumao)</p><div id="lob"><div class="row"><button id="of">▶ Offline Practice</button></div><div class="row"><button id="cr">Create Online Room</button></div><div class="row"><input id="rc" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="jn">Join</button></div></div><div id="st"></div><button id="go" disabled>Loading…</button><button id="lv">Leave</button></div>
+<div id="ov"><h1 id="t">1v1 TDM Arena</h1><p id="d">WASD move · Mouse look · Left click shoot · Right click aim · R reload<br>Shift sprint · C crouch · Space jump · First to 10 kills wins<br>(Mobile: left side stick se chalo, right side drag se ghumao)<br>(Mouse lock na chale to Right-click drag se ghumao)</p><div id="lob"><div class="row"><button id="of">▶ Offline Practice</button></div><div class="row"><button id="qm">⚡ Quick Match</button></div><div class="row"><button id="cr">Create Online Room</button></div><div class="row"><input id="rc" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false"><button id="jn">Join</button></div></div><div id="st"></div><button id="go" disabled>Loading…</button><button id="lv">Leave</button></div>
 <script>const ASSETS_EXTERNAL=true;</script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -37,13 +37,14 @@ sc.add(new T.HemisphereLight(0xffffff,0x667766,1));const sun=new T.DirectionalLi
 const rot=()=>touch&&innerHeight>innerWidth,VW=()=>rot()?innerHeight:innerWidth,VH=()=>rot()?innerWidth:innerHeight;
 const rs=()=>{document.body.classList.toggle('r',rot());R.setSize(VW(),VH());cam.aspect=VW()/VH();cam.updateProjectionMatrix()};addEventListener('resize',rs);addEventListener('orientationchange',()=>setTimeout(rs,200));rs();
 const L=new T.GLTFLoader(),load=url=>new Promise((resolve,reject)=>L.load(url,g=>resolve(g),undefined,reject));
-Promise.all([load('player_rig.glb'),load('virtual_studio.glb'),load('human_body_idle_animated.glb')]).then(init).catch(e=>{$('go').textContent='Load error: '+e.message+' (check that all GLB files are beside index.html)'});
+Promise.all([load('player_rig.glb'),load('virtual_studio.glb'),load('human_body_idle_animated.glb')]).then(init).catch(e=>{console.error('Game asset load failed:',e);$('go').disabled=false;$('go').textContent='Retry after fixing assets';$('st').textContent='3D model load failed: '+e.message+' — check GLB files and internet/cache.'});
 function init([A,M,CHAR]){
+$('go').disabled=false;$('go').textContent='Choose a mode above';
 const map=M.scene;map.scale.setScalar(3);map.position.y=0;sc.add(map);map.updateMatrixWorld(true);
 const meshes=[],groundMeshes=[];map.traverse(o=>{if(o.isMesh){meshes.push(o);o.castShadow=true;o.receiveShadow=true;if(o.parent&&o.parent.name==='Cube.001')groundMeshes.push(o)}});
 const rc=new T.Raycaster(),DN=new T.Vector3(0,-1,0),V=new T.Vector3(),V2=new T.Vector3(),D=new T.Vector3();
 const hitMap=(o,d,far)=>{rc.set(o,d);rc.far=far;return rc.intersectObjects(meshes,false)[0]||null};
-const hitGround=(o,d,far)=>{rc.set(o,d);rc.far=far;return rc.intersectObjects(groundMeshes.length?groundMeshes:meshes,false)[0]||null};
+const hitGround=(o,d,far)=>{rc.set(o,d);rc.far=far;const hits=rc.intersectObjects(groundMeshes.length?groundMeshes:meshes,false);for(const h of hits){if(!h.face)continue;const n=h.face.normal.clone().applyMatrix3(new T.Matrix3().getNormalMatrix(h.object.matrixWorld)).normalize();if(n.y>.55)return h}return null};
 const ground=(x,z,y)=>{const h=hitGround(V.set(x,y,z),DN,90);return h?h.point.y:null};
 const ONCE=new Set(['Pistol_Reload','Pistol_Shoot','Death01']);
 function mk(col){
@@ -184,7 +185,7 @@ async function quick(n){n=n||0;if(n>3){ui.say('Match nahi mila, dobara try karo'
     if(taken&&await join(taken,true))return;
     return await quick(n+1)}
   catch(e){net.err(e)}finally{busy(false)}}
-$('cr').onclick=create;$('jn').onclick=()=>join($('rc').value);$('lv').onclick=()=>leave('');
+$('qm').onclick=()=>quick();$('cr').onclick=create;$('jn').onclick=()=>join($('rc').value);$('lv').onclick=()=>leave('');
 ['keydown','keyup'].forEach(t=>$('rc').addEventListener(t,e=>{e.stopPropagation();if(t==='keydown'&&e.key==='Enter')join($('rc').value)}));
 function offlineBot(dt,now){
  if(!offlineMode||!started||over||paused)return;
