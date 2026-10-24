@@ -115,7 +115,7 @@ function pFire(now){P.ammo--;P.next=now+.11;P.ft=.05;P.recoil=1;P.flash.visible=
   if(h&&h.t<md){e=o.clone().addScaledVector(D,h.t);dm=20*h.m;hm=.15;$('cross').className='h'}
   const a=gp(P);tracer(a,e);if(offlineMode){if(dm>0&&!B.dead){B.hp-=dm;B.flash.visible=true;B.ft=.05;if(B.hp<=0){B.hp=0;B.dead=true;B.respawn=now+2.5;sound('hit');once(B,'Death01',now);P.kills++;scores();msg('Enemy eliminated');checkWin()}}}else net.ev({ax:r2(a.x),ay:r2(a.y),az:r2(a.z),bx:r2(e.x),by:r2(e.y),bz:r2(e.z),dm:dm})}
 function onHit(v){
-  if(v.ax!==undefined){tracer(new T.Vector3(v.ax,v.ay,v.az),new T.Vector3(v.bx,v.by,v.bz));B.flash.visible=true;B.ft=.05}
+  if(v.ax!==undefined){sound('gun');tracer(new T.Vector3(v.ax,v.ay,v.az),new T.Vector3(v.bx,v.by,v.bz));B.flash.visible=true;B.ft=.05}
   const now=nowS();
   if(v.dm>0&&started&&!over&&!P.dead&&net.oppReady){P.hp-=v.dm;hurt=.7;if(P.hp<=0)die(now)}
   if(v.die&&!over){sound('hit');P.kills++;scores();msg('You eliminated the enemy');checkWin()}}
