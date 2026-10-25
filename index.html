@@ -6,35 +6,34 @@
 #menu{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#07101beF,#172a3ceF);overflow:auto}.panel{width:min(460px,100%);border:1px solid #ffffff22;border-radius:24px;background:#0d1925ed;padding:26px;box-shadow:0 25px 100px #0008;text-align:center}.eyebrow{color:#ffbf52;font-size:11px;font-weight:900;letter-spacing:3px}.panel h1{font-size:clamp(28px,7vw,42px);line-height:1.02;margin:10px 0}.panel p{color:#b8c7d5;line-height:1.55}.actions{display:grid;gap:9px;margin-top:20px}button,input{font:inherit}button{border:0;border-radius:12px;padding:13px 16px;font-weight:850;font-size:15px;color:#0b1420;background:#ffbf52;cursor:pointer}button.secondary{background:#213346;color:#edf5ff;border:1px solid #ffffff20}button:disabled{opacity:.5}input{width:115px;min-width:0;background:#09131e;color:#fff;border:1px solid #ffffff30;border-radius:12px;padding:12px;text-align:center;text-transform:uppercase;font-weight:900;letter-spacing:4px}.join{display:flex;gap:8px}.join input{flex:1;width:100%}#note{min-height:20px;color:#ffcf73;font-size:13px;margin-top:12px;overflow-wrap:anywhere}.tiny{font-size:11px!important;color:#8297aa!important}
 #touch{display:none;position:fixed;inset:0;pointer-events:none;z-index:3}.stick{position:absolute;left:24px;bottom:calc(26px + env(safe-area-inset-bottom));width:116px;height:116px;border-radius:50%;border:2px solid #ffffff35;background:#dbeaff15;pointer-events:auto;touch-action:none}.knob{position:absolute;left:35px;top:35px;width:42px;height:42px;border-radius:50%;background:#e8f4ff9c;border:2px solid #fff8}.touchbtn{position:absolute;right:18px;width:60px;height:60px;border-radius:50%;background:#ffffff30;border:1px solid #ffffff65;color:white;display:grid;place-items:center;font-size:11px;font-weight:900;pointer-events:auto;touch-action:none}.fire{right:20px;bottom:calc(50px + env(safe-area-inset-bottom));width:78px;height:78px;background:#ef4567bb}.jump{right:108px;bottom:calc(38px + env(safe-area-inset-bottom))}.reload{right:108px;bottom:calc(112px + env(safe-area-inset-bottom))}.run{right:20px;bottom:calc(146px + env(safe-area-inset-bottom))}.crouch{right:188px;bottom:calc(40px + env(safe-area-inset-bottom))}.aim{right:188px;bottom:calc(112px + env(safe-area-inset-bottom))}body.playing #menu{display:none}body.playing #touch{display:block}body.playing #menu{pointer-events:none}@media(orientation:portrait){body.playing #rotatePrompt{display:flex!important;z-index:999!important}body.playing canvas{position:fixed!important;left:0!important;top:0!important;width:100vw!important;height:100dvh!important;transform:none!important}}@media(hover:none){.status{width:145px;font-size:12px}.top{font-size:15px;padding:7px 12px}}
 
-/* SK SARS 1v1 themed splash */
-#skSplash{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at 50% 35%,#344522 0%,#171d13 48%,#080b08 100%);color:#fff;transition:opacity .45s ease,visibility .45s ease;font-family:system-ui,-apple-system,sans-serif}
-#skSplash.hide{opacity:0;visibility:hidden;pointer-events:none}
-#skSplash .splash-card{width:min(440px,100%);text-align:center;padding:30px 24px;border:1px solid #d9f28b55;border-radius:24px;background:linear-gradient(160deg,#1a2418f5,#0a0e0bf5);box-shadow:0 24px 90px #000b}
-#skSplash .brand{font-size:12px;font-weight:1000;letter-spacing:5px;color:#d8f77a}
-#skSplash .emblem{width:88px;height:88px;margin:18px auto 14px;border-radius:23px;display:grid;place-items:center;font-size:43px;font-weight:1000;color:#11180b;background:linear-gradient(145deg,#e7ff8d,#9bbd38);box-shadow:0 0 36px #b8e84c35;transform:rotate(-5deg)}
-#skSplash h1{margin:8px 0;font-size:clamp(28px,8vw,42px);line-height:1;font-weight:1000;letter-spacing:1px}
-#skSplash .tag{color:#d9f28b;font-size:11px;font-weight:900;letter-spacing:4px;margin:12px 0}
-#skSplash .desc{color:#c4cbb9;font-size:13px;margin:10px 0 22px}
-#skSplash .loadrow{display:flex;justify-content:space-between;gap:12px;font-size:11px;font-weight:800;color:#e3e8d7;margin-bottom:8px}
-#skSplash .track{height:8px;border-radius:99px;background:#ffffff18;overflow:hidden}
-#skSplash .fill{height:100%;width:0;background:linear-gradient(90deg,#90b82b,#e4ff8b);border-radius:99px;transition:width .15s}
-#skSplash .dev{margin-top:20px;font-size:11px;color:#929b86}
-#skSplash .dev strong{color:#e6f6bd}
+
+/* SK SARS branded boot/loading screen — same style as the other games */
+#sksars-boot{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 25%,#17314b 0%,#080c16 55%,#03050a 100%);color:#f4f8ff;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;padding:24px;box-sizing:border-box;transition:opacity .35s ease}
+#sksars-boot *{box-sizing:border-box}
+#sksars-boot .sk-card{width:min(420px,100%);text-align:center;padding:30px 24px;border:1px solid #65c8ff55;border-radius:24px;background:#081321cc;box-shadow:0 18px 70px #0009,0 0 35px #178bd522;backdrop-filter:blur(12px)}
+#sksars-boot .sk-logo{width:94px;height:94px;margin:0 auto 16px;display:grid;place-items:center;border-radius:26px;background:linear-gradient(145deg,#37d5ff,#2767ff 58%,#8a42ff);box-shadow:0 0 35px #287dff66;transform:rotate(-4deg)}
+#sksars-boot .sk-logo svg{width:68px;height:68px;transform:rotate(4deg)}
+#sksars-boot .sk-brand{font-size:clamp(27px,7vw,38px);font-weight:900;letter-spacing:3px;line-height:1.1}
+#sksars-boot .sk-tag{margin:8px 0 28px;color:#9db6d2;font-size:12px;letter-spacing:3px;text-transform:uppercase}
+#sksars-boot .sk-theme-line{margin:-17px 0 22px;color:#d9e4ef;font-size:12px;letter-spacing:.5px}
+#sksars-boot .sk-developer{margin:-10px 0 24px;color:#8fa8c0;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+#sksars-boot .sk-developer strong{color:#fff;font-size:12px;letter-spacing:.7px}
+#sksars-boot .sk-status{font-size:13px;color:#c4d8ed;margin:0 0 10px}
+#sksars-boot .sk-track{height:9px;background:#ffffff16;border:1px solid #ffffff18;border-radius:99px;overflow:hidden}
+#sksars-boot .sk-fill{height:100%;width:0;background:linear-gradient(90deg,#24d8ff,#5b8cff,#b36bff);border-radius:99px;box-shadow:0 0 16px #42a5ff88;transition:width .18s ease}
+#sksars-boot .sk-percent{font-size:26px;font-weight:800;margin:12px 0 4px;font-variant-numeric:tabular-nums}
+#sksars-boot .sk-hint{font-size:11px;color:#718ba7;margin-top:14px}
+#sksars-boot .sk-reload{display:none;margin:18px auto 0;padding:12px 24px;border:0;border-radius:12px;background:#eaf5ff;color:#091323;font-weight:800;font-size:14px}
+#sksars-boot.sk-failed .sk-reload{display:block}
+#sksars-boot.sk-failed .sk-status{color:#ffaaa8}
+#sksars-boot.sk-failed .sk-fill{background:#ff5656}
+#sksars-boot.theme-battle{background:radial-gradient(ellipse at 50% 24%,#4b3c1b 0%,#17170e 56%,#070805 100%)}
+#sksars-boot.theme-battle .sk-card{border-color:#ffca4866;box-shadow:0 18px 70px #000b,0 0 36px #ffca4822}
+#sksars-boot.theme-battle .sk-logo{background:linear-gradient(145deg,#ffca48,#a9d94b 58%,#7f692b);box-shadow:0 0 35px #ffca4866}
+#sksars-boot.theme-battle .sk-fill{background:linear-gradient(90deg,#ffca48,#a9d94b,#ffffff);box-shadow:0 0 16px #ffca4888}
 
 </style></head><body>
-<div id="skSplash" role="status" aria-live="polite">
-  <div class="splash-card">
-    <div class="brand">SK SARS PRESENTS</div>
-    <div class="emblem">1v1</div>
-    <h1>ARENA DUEL</h1>
-    <div class="tag">BATTLE ARENA</div>
-    <div class="desc">Drop in. Gear up. Win the duel.</div>
-    <div class="loadrow"><span id="skLoadLabel">PREPARING ARENA...</span><span id="skLoadPct">0%</span></div>
-    <div class="track"><div class="fill" id="skLoadFill"></div></div>
-    <div class="dev">Developed by <strong>Sumit Atariya</strong></div>
-  </div>
-</div>
-
+<div id="sksars-boot" class="theme-battle" role="status" aria-live="polite"><div class="sk-card"><div class="sk-logo" aria-label="SK SARS logo"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M20 20h60v60H20z" stroke="white" stroke-width="4"/><path d="M65 32H43c-8 0-13 5-13 12s5 12 13 12h14c5 0 8 3 8 7s-3 7-8 7H31" stroke="white" stroke-width="7" stroke-linecap="round"/><path d="M70 22l8 8-8 8" stroke="#dffaff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="sk-brand">SK SARS</div><div class="sk-tag">BATTLE ARENA</div><div class="sk-theme-line">Drop in. Gear up. Fight.</div><div class="sk-developer">Developed by <strong>Sumit Atariya</strong></div><p class="sk-status" id="sksars-status">Starting game engine…</p><div class="sk-track"><div class="sk-fill" id="sksars-fill"></div></div><div class="sk-percent" id="sksars-percent">0%</div><div class="sk-hint">Please keep this page open while loading</div><button class="sk-reload" id="sksars-reload" type="button">↻ Reload Game</button></div></div>
 <div id="rotatePrompt" style="display:none;position:fixed;inset:0;z-index:999;background:#08111cf5;color:white;align-items:center;justify-content:center;text-align:center;padding:24px;font-weight:800;font-size:20px"><div>↻<br>PHONE KO LANDSCAPE GHUMAO<br><small style="font-size:13px;font-weight:500;color:#c6d3df">ARENA FIGHT landscape mode mein best chalega</small></div></div><div id="hud"><div class="top">YOU <em id="scoreA">0</em> <span style="color:#8297aa">—</span> <em id="scoreB">0</em> ENEMY</div><div class="cross"></div><div class="enemybar" id="enemybar"><i id="enemyhp"></i></div><div class="status">HEALTH <b id="healthN">100</b><div class="bar"><i id="health"></i></div><div style="margin-top:5px;color:#a9bbca">FIRST TO 10</div></div><div class="ammo" id="ammo">COMBO ×0</div><div class="msg" id="msg"></div><div class="hurt" id="hurt"></div></div>
 <div id="touch"><div class="stick" id="stick"><div class="knob" id="knob"></div></div><button class="touchbtn fire" id="fire">PUNCH</button><button class="touchbtn jump" id="jump">JUMP</button><button class="touchbtn reload" id="reload">KICK</button><button class="touchbtn run" id="run">RUN</button><button class="touchbtn crouch" id="crouch">CROUCH</button><button class="touchbtn aim" id="aim">BLOCK</button></div>
 <div id="menu"><div class="panel"><div class="eyebrow">FIGHT CLUB • 1V1</div><h1>ARENA<br><span style="color:#ffbf52">FIGHT</span></h1><p>Close-combat 1v1 • Punch, kick, block and jump. Lightweight mobile controls.</p><div class="actions"><button id="offline">▶ OFFLINE PRACTICE</button><button class="secondary" id="create">CREATE ONLINE ROOM</button><div class="join"><input id="code" maxlength="4" placeholder="CODE" autocomplete="off"><button id="join">JOIN ROOM</button></div></div><div id="note">Loading 3D models…</div><section id="changes" style="margin-top:14px;text-align:left;padding:12px 14px;border:1px solid #ffbf5244;border-radius:14px;background:#ffbf520b"><div style="font-size:12px;font-weight:900;letter-spacing:1.5px;color:#ffbf52;margin-bottom:7px">WHAT CHANGED • LATEST UPDATE</div><ul style="margin:0;padding-left:18px;color:#d8e4ee;font-size:12px;line-height:1.65"><li>Rifle / gun loading code removed</li><li>Close-combat controls: punch, kick, block and jump</li><li>Virtual Studio arena map retained</li><li>Mobile-friendly low-power rendering</li><li>Character animation playback fix included</li></ul></section><section id="buildInfo" style="margin-top:10px;padding:10px 12px;border:1px solid #ffffff20;border-radius:12px;background:#07101b99;text-align:left;font-size:12px;line-height:1.7"><div style="color:#9fb2c4;font-weight:800;letter-spacing:1px;font-size:10px">BUILD INFO</div><div>🕒 Last update: <b style="color:#fff">24 Oct 2026 · 2:35 PM IST</b></div><div>Commit: <a href="https://github.com/sksars/1v1/commit/60ec9a6a0722434dfe0918ef40ebfa91f1d99ec8" target="_blank" rel="noopener" style="color:#ffbf52;font-weight:900;text-decoration:none">60ec9a6 ↗</a></div></section><p class="tiny">WASD move · Click punch · F kick · Right-click block · Space jump<br>Mobile: left stick move, drag right side to turn.</p><button class="secondary" id="back" style="display:none;width:100%;margin-top:8px">LEAVE MATCH</button></div></div>
@@ -141,24 +140,12 @@ function hold(id,on,off){const el=$(id);el.addEventListener('pointerdown',e=>{e.
 hold('fire',()=>fireDown=true,()=>fireDown=false);hold('jump',()=>jumpDown=true,()=>jumpDown=false);hold('reload',()=>strike("kick",performance.now()/1000),()=>{});hold('run',()=>runDown=true,()=>runDown=false);hold('crouch',()=>crouchDown=true,()=>crouchDown=false);hold('aim',()=>{aimDown=true;blockDown=true},()=>{aimDown=false;blockDown=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){fireDown=false;jumpDown=false}});
 })();</script>
-<script>
-(function(){
-  const splash=document.getElementById('skSplash');
-  if(!splash)return;
-  const pct=document.getElementById('skLoadPct'),fill=document.getElementById('skLoadFill'),label=document.getElementById('skLoadLabel');
-  let p=0,closed=false;
-  const labels=[[18,'LOADING GAME UI...'],[42,'PREPARING ARENA...'],[68,'SETTING CONTROLS...'],[88,'ALMOST READY...'],[100,'READY!']];
-  const timer=setInterval(()=>{
-    if(closed){clearInterval(timer);return;}
-    p=Math.min(100,p+(p<65?Math.ceil(Math.random()*7+3):Math.ceil(Math.random()*3+1)));
-    pct.textContent=p+'%';fill.style.width=p+'%';
-    const item=labels.findLast?labels.findLast(x=>p>=x[0]):labels.slice().reverse().find(x=>p>=x[0]);
-    if(item)label.textContent=item[1];
-    if(p>=100){clearInterval(timer);setTimeout(hide,350);}
-  },115);
-  function hide(){if(closed)return;closed=true;splash.classList.add('hide');setTimeout(()=>splash.remove(),550);}
-  window.addEventListener('load',()=>{if(p<92){p=92;pct.textContent=p+'%';fill.style.width=p+'%';label.textContent='FINISHING UP...';}});
-  setTimeout(hide,6500);
+<script id="sksars-boot-script">
+(function(){var root=document.getElementById('sksars-boot'),fill=document.getElementById('sksars-fill'),pct=document.getElementById('sksars-percent'),status=document.getElementById('sksars-status'),reload=document.getElementById('sksars-reload');if(!root)return;var value=0,finished=false,timer=null;function set(n,label){value=Math.max(value,Math.min(100,n));fill.style.width=value+'%';pct.textContent=Math.round(value)+'%';if(label)status.textContent=label;}reload.addEventListener('click',function(){location.reload();});function fail(message){if(finished)return;root.classList.add('sk-failed');status.textContent=message||'Loading failed. Check your internet and reload.';clearInterval(timer);}
+window.addEventListener('error',function(e){if(e&&e.message&&/script error/i.test(e.message))return;fail('A game resource failed. Tap Reload Game to try again.');});window.addEventListener('unhandledrejection',function(){fail('A game resource failed. Tap Reload Game to try again.');});
+timer=setInterval(function(){if(value<88){set(value+(value<35?4:value<65?2:0.7),value<30?'Preparing game…':value<65?'Loading game resources…':'Finishing setup…');}},180);
+function done(){if(root.classList.contains('sk-failed'))return;set(100,'Game ready!');finished=true;clearInterval(timer);setTimeout(function(){root.style.opacity='0';setTimeout(function(){root.remove();},400);},450);}
+if(document.readyState==='complete')setTimeout(done,250);else window.addEventListener('load',function(){setTimeout(done,350);},{once:true});setTimeout(function(){if(!finished&&!root.classList.contains('sk-failed')&&document.readyState!=='complete')fail('Loading is taking too long. Check connection and reload.');},45000);
 })();
 </script>
 
