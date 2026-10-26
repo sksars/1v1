@@ -25,8 +25,8 @@ button:hover{background:var(--a);border-color:var(--a)}
 #pad .keys{display:grid;grid-template-columns:repeat(3,62px);gap:6px;pointer-events:auto}#joy{position:relative;width:136px;height:136px;border-radius:50%;background:#0006;border:2px solid #fff8;pointer-events:auto}#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;background:#ffffffcc;box-shadow:0 0 12px var(--a)}#cr{position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 74px);width:46px;height:42px;padding:0;font-size:20px;transform:none;background:#0007;border-radius:10px}
 #pad button{transform:none;padding:0;height:52px;font-size:20px;border-radius:12px;background:#0007}
 #pad button:active{background:var(--a)}
-#root{position:fixed;inset:0;overflow:hidden}#root.rot{inset:auto;top:0;left:0;transform-origin:0 0;transform:rotate(90deg) translateY(-100%)}
-</style></head><body><div id="root">
+#splash{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;background:radial-gradient(ellipse at center,#28203c 0%,#0b0b12 68%);font-family:Impact,"Arial Narrow",sans-serif}#splash h1{font-size:clamp(54px,13vw,110px);line-height:.82;letter-spacing:3px;color:#fff;text-shadow:0 0 22px var(--a),5px 5px 0 #000}#splash p{font:16px Arial,sans-serif;letter-spacing:2px;color:#b8f5ff}#startFight{font-size:30px;background:linear-gradient(110deg,var(--a),#792cff);border:2px solid #fff;box-shadow:0 0 24px #ff3d7f88;animation:pulse 1.5s infinite alternate}@keyframes pulse{to{box-shadow:0 0 38px #2ee6ffbb;transform:skewX(-12deg) scale(1.04)}}#startFight:disabled{opacity:.45;animation:none}#root{position:fixed;inset:0;overflow:hidden}#root.rot{inset:auto;top:0;left:0;transform-origin:0 0;transform:rotate(90deg) translateY(-100%)}
+</style></head><body><div id="splash"><h1>STUDIO<br>BRAWL 3D</h1><p id="loadText">LOADING FIGHTERS…</p><button id="startFight" disabled>START FIGHT</button></div><div id="root">
 <div id="hud"><div id="top"><div class="side"><div class="nm" id="n0">P1</div><div class="bar"><i class="tr" id="t0"></i><i class="hp" id="h0"></i></div><div class="pips" id="p0"></div></div>
 <div id="mid"><span id="tm">60</span></div>
 <div class="side r"><div class="nm" id="n1">CPU</div><div class="bar"><i class="tr" id="t1"></i><i class="hp" id="h1"></i></div><div class="pips" id="p1"></div></div></div></div>
@@ -140,6 +140,7 @@ function loop(){requestAnimationFrame(loop);let dt=Math.min(clk.getDelta(),.05);
   const az=CAM.az+(G.phase==='menu'?Math.sin(performance.now()/2500)*.3:0),sk=(Math.random()-.5)*G.shake;C.position.set(CAM.x+Math.sin(az)*CAM.d+sk,CAM.h+sk,Math.cos(az)*CAM.d);C.lookAt(CAM.x,1,0)}
  R.render(S,C)}
 const n1=()=>G.mode==='cpu'?'CPU':'PLAYER 2';
+$('startFight').addEventListener('click',()=>{if(!$('startFight').disabled)begin('cpu')});
 const clk=new THREE.Clock();
 function prep(gl){gl.scene.updateMatrixWorld(true);let lo=1e9,hi=-1e9;
  gl.scene.traverse(o=>{if(o.isBone){const y=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld).y;lo=Math.min(lo,y);hi=Math.max(hi,y)}});
@@ -153,12 +154,11 @@ function prep(gl){gl.scene.updateMatrixWorld(true);let lo=1e9,hi=-1e9;
  studio.position.set(-c.x,-bx.min.y,-c.z);S.add(studio);
  {const k2=document.createElement('canvas');k2.width=1024;k2.height=256;const x2=k2.getContext('2d');x2.font='bold 190px Impact,"Arial Black",sans-serif';x2.textAlign='center';x2.textBaseline='middle';x2.fillStyle='#fff';x2.shadowColor='#ff3d7f';x2.shadowBlur=40;x2.fillText('SK SARS',512,138);x2.shadowColor='#2ee6ff';x2.shadowBlur=20;x2.fillText('SK SARS',512,138);
   const tx=new THREE.CanvasTexture(k2);tx.encoding=THREE.sRGBEncoding;const mk=o=>new THREE.MeshBasicMaterial({map:tx,transparent:true,toneMapped:false,depthWrite:false,opacity:o});
-  [-13,-6.5,0,6.5,13].forEach(px=>{const s=new THREE.Mesh(new THREE.PlaneGeometry(5.2,1.3),mk(1));s.position.set(px,2.3,-5.3);S.add(s)});
-  const fl=new THREE.Mesh(new THREE.PlaneGeometry(5.5,1.4),mk(.45));fl.rotation.x=-Math.PI/2;fl.position.set(0,.02,-1.7);S.add(fl)}
+  /* Removed unused SK SARS arena billboards and floor text. */}
  P=[new F(0,gg),new F(1,gg,new THREE.Color(.55,.75,1))];
- G.phase='menu';hud();begin('cpu');
+ G.phase='menu';hud();$('loadText').textContent='READY TO FIGHT';$('startFight').disabled=false;
 }catch(e){console.error('Failed to load fighters',e)}})();
-function begin(m){try{if(matchMedia('(pointer:coarse)').matches){const el=document.documentElement;(el.requestFullscreen?el.requestFullscreen():Promise.reject()).then(()=>screen.orientation.lock('landscape')).catch(()=>{})}}catch(e){}G.mode=m;G.round=1;G.w=[0,0];$('n1').textContent=n1()==='CPU'?'CPU':'P2';startRound()}
+function begin(m){$('splash').style.display='none';try{if(matchMedia('(pointer:coarse)').matches){const el=document.documentElement;(el.requestFullscreen?el.requestFullscreen():Promise.reject()).then(()=>screen.orientation.lock('landscape')).catch(()=>{})}}catch(e){}G.mode=m;G.round=1;G.w=[0,0];$('n1').textContent=n1()==='CPU'?'CPU':'P2';startRound()}
 const KM={KeyA:[0,'l'],KeyD:[0,'r'],KeyW:[0,'u'],KeyS:[0,'d'],KeyH:[0,'b'],ShiftLeft:[0,'b'],KeyJ:[0,'jab'],KeyK:[0,'kick'],KeyL:[0,'round'],KeyU:[0,'upper'],
 ArrowLeft:[1,'l'],ArrowRight:[1,'r'],ArrowUp:[1,'u'],ArrowDown:[1,'d'],Digit5:[1,'b'],Numpad5:[1,'b'],Digit1:[1,'jab'],Numpad1:[1,'jab'],Digit2:[1,'kick'],Numpad2:[1,'kick'],Digit3:[1,'round'],Numpad3:[1,'round'],Digit4:[1,'upper'],Numpad4:[1,'upper']};
 function setK(pl,k,dn){const f=P[pl];if(!f||(pl&&G.mode==='cpu'))return;if(ATK.includes(k)){if(dn){f.press=k;f.pt=performance.now()}}else f.inp[k]=dn?1:0}
