@@ -211,24 +211,28 @@ function setMap(n){const t=n==='tunnel';G.map=n;if(studio)studio.visible=!t;SIG.
 const DB='https://v1game-41650-default-rtdb.firebaseio.com',NET={on:0,host:0,code:'',n:0,seen:0,busy:0,acc:0,rx:null,rxAt:0,es:[],fl:0,buf:[],off:null};
 const ost=t=>{$('ost').textContent=t},put=(p,d)=>fetch(DB+'/brawl/'+p+'.json',{method:'PUT',body:JSON.stringify(d),keepalive:true}).catch(()=>{});
 const netErr=e=>{const m=(e&&e.message)||'';console.error('NET',e);return /^40[13]$/.test(m)?'ERROR '+m+': DATABASE RULES BLOCK ACCESS – SET "brawl" .read/.write TO true':/^\d+$/.test(m)?'SERVER ERROR '+m+(m==='404'?' – REALTIME DATABASE NOT CREATED / WRONG URL':''):'NETWORK BLOCKED ('+m+') – OPEN THE GAME FROM YOUR OWN WEB HOST, NOT THE CLAUDE PREVIEW / file://'};
-function sub(p,cb){const es=new EventSource(DB+'/brawl/'+p+'.json');es.addEventListener('put',e=>{try{const j=JSON.parse(e.data);if(j&&j.path==='/')cb(j.data)}catch(_){}});NET.es.push(es)}
+function sub(p,cb){const o={dead:0,es:null},open=()=>{if(o.dead)return;const es=new EventSource(DB+'/brawl/'+p+'.json');o.es=es;
+ es.addEventListener('put',e=>{try{const j=JSON.parse(e.data);if(j&&j.path==='/')cb(j.data)}catch(_){}});es.onerror=()=>{if(es.readyState===2)setTimeout(open,1000)}};
+ o.re=()=>{if(o.es)o.es.close();open()};open();NET.es.push(o)}
 function netBuf(v){const n=performance.now(),b=NET.buf,l=b[b.length-1];if(!v.ts||(l&&v.ts<=l.ts))return;const d=n-v.ts;NET.off=NET.off==null||d<NET.off?d:NET.off+(d-NET.off)*.02;b.push(v);if(b.length>40)b.shift()}
-function netStop(){NET.es.forEach(e=>e.close());NET.es=[];if(NET.host&&NET.code)fetch(DB+'/brawl/'+NET.code+'.json',{method:'DELETE'}).catch(()=>{});NET.on=0;NET.code=''}
+function netStop(){clearInterval(NET.iv);NET.es.forEach(o=>{o.dead=1;if(o.es)o.es.close()});NET.es=[];if(NET.host&&NET.code)fetch(DB+'/brawl/'+NET.code+'.json',{method:'DELETE'}).catch(()=>{});NET.on=0;NET.code=''}
 const netEv=(t,d)=>{NET.n++;put(NET.code+'/ev'+(NET.host?0:1),Object.assign({n:NET.n,t},d))};
 function netEvIn(e){if(e.t==='hit'&&G.phase==='fight')P[0].recv(e);else if(e.t==='end'&&!NET.host&&G.phase==='fight'){P[1].hp=e.h0;P[0].hp=e.h1;endRound()}}
-function startNet(map){if(NET.on)return;NET.on=1;NET.n=0;NET.seen=0;NET.rx=null;NET.buf=[];NET.off=null;NET.fl=0;NET.acc=0;NET.rxAt=performance.now();const op=NET.host?1:0;
- sub(NET.code+'/p'+op,v=>{if(v){NET.rx=v;NET.rxAt=performance.now();netBuf(v)}});sub(NET.code+'/ev'+op,e=>{if(e&&e.n>NET.seen){NET.seen=e.n;netEvIn(e)}});begin('online',map)}
+function startNet(map){if(NET.on)return;NET.on=1;NET.n=0;NET.seen=0;NET.rx=null;NET.buf=[];NET.off=null;NET.fl=0;NET.acc=0;NET.rxAt=performance.now();NET.reAt=0;NET.rc=0;clearInterval(NET.iv);NET.iv=setInterval(netTick,33);const op=NET.host?1:0;
+ sub(NET.code+'/p'+op,v=>{if(v){NET.rx=v;NET.rxAt=performance.now();if(NET.rc){NET.rc=0;ban('')}netBuf(v)}});sub(NET.code+'/ev'+op,e=>{if(e&&e.n>NET.seen){NET.seen=e.n;netEvIn(e)}});begin('online',map)}
 async function netCreate(map){netStop();ost('CONNECTING…');NET.host=1;NET.code=String(1000+Math.random()*9000|0);
  try{const r=await fetch(DB+'/brawl/'+NET.code+'/meta.json',{method:'PUT',body:JSON.stringify({map,t:Date.now()})});if(!r.ok)throw Error(r.status)}catch(e){NET.code='';return ost(netErr(e))}
  ost('ROOM CODE: '+NET.code+'  –  WAITING FOR FRIEND…');sub(NET.code+'/g',v=>{if(v)startNet(map)})}
 async function netJoin(){const c=$('code').value.trim();if(!/^\d{4}$/.test(c))return ost('TYPE THE 4-DIGIT ROOM CODE');netStop();NET.host=0;ost('JOINING…');
  try{const r=await fetch(DB+'/brawl/'+c+'/meta.json');if(!r.ok)throw Error(r.status);const m=await r.json();if(!m)return ost('ROOM NOT FOUND');
   NET.code=c;await fetch(DB+'/brawl/'+c+'/g.json',{method:'PUT',body:'1'});startNet(m.map)}catch(e){NET.code='';ost(netErr(e))}}
-function netLoop(dt){NET.acc+=dt;if(G.phase==='menu')return;
- if(NET.acc>=.033&&NET.fl<3){NET.acc=0;NET.fl++;const a=P[0],w=NET.host?[a.x,a.z,a.ang]:[-a.x,-a.z,wrap(a.ang+PI)],f=v=>+v.toFixed(3);
-  fetch(DB+'/brawl/'+NET.code+'/p'+(NET.host?0:1)+'.json',{method:'PUT',keepalive:true,body:JSON.stringify({x:f(w[0]),z:f(w[1]),a:f(w[2]),y:f(a.y),pn:a.pn,pq:a.pq,po:a.po,pf:a.pf,hp:a.hp,st:a.st,c:a.crouch?1:0,b:a.blk?1:0,rd:G.round,ts:performance.now()})}).catch(()=>{}).finally(()=>{NET.fl--})}
- if(performance.now()-NET.rxAt>7000){netStop();G.phase='menu';G.fight=false;ban('');$('loadText').textContent='OPPONENT LEFT';$('splash').style.display='flex'}}
-
+function netTick(){if(!NET.on||G.phase==='menu'||!P[0])return;const now=performance.now();
+ if(NET.fl<3){NET.fl++;const a=P[0],w=NET.host?[a.x,a.z,a.ang]:[-a.x,-a.z,wrap(a.ang+PI)],f=v=>+v.toFixed(3);
+  fetch(DB+'/brawl/'+NET.code+'/p'+(NET.host?0:1)+'.json',{method:'PUT',keepalive:true,body:JSON.stringify({x:f(w[0]),z:f(w[1]),a:f(w[2]),y:f(a.y),pn:a.pn,pq:a.pq,po:a.po,pf:a.pf,hp:a.hp,st:a.st,c:a.crouch?1:0,b:a.blk?1:0,rd:G.round,ts:now})}).catch(()=>{}).finally(()=>{NET.fl--})}
+ const st=now-NET.rxAt;
+ if(st>3000&&now-NET.reAt>3000){NET.reAt=now;NET.es.forEach(o=>o.re());NET.rc=1;ban('RECONNECTING…')}
+ if(st>25000){netStop();G.phase='menu';G.fight=false;NET.rc=0;ban('');$('loadText').textContent='OPPONENT LEFT';$('splash').style.display='flex'}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&NET.on)NET.rxAt=performance.now()});
 function ai(f,o,dt){f.ait-=dt;if(f.ait>0)return;f.ait=.12+Math.random()*.25;
  const i=f.inp,dx=o.x-f.x,dz=o.z-f.z,d=Math.hypot(dx,dz),ux=dx/(d||1),uz=dz/(d||1);i.d=i.b=0;f.wx=f.wz=0;
  if(o.st==='atk'&&d<2.2&&Math.random()<.5){i.b=1;if(o.a.low)i.d=1;f.ait=.35;return}
@@ -278,7 +282,7 @@ function loop(){requestAnimationFrame(loop);const raw=clk.getDelta();let dt=Math
   a.update(dt,b);b.update(dt,a);
   const dx=b.x-a.x,dz=b.z-a.z,d=Math.hypot(dx,dz);if(d<.8&&a.y<.3&&b.y<.3){const s=(.8-d)/2,ux=d?dx/d:1,uz=d?dz/d:0;
    const kk=b.rem?2:1;a.g.position.x=cl(a.g.position.x-ux*s*kk,-ARX,ARX);a.g.position.z=cl(a.g.position.z-uz*s*kk,-ARZ,ARZ);if(!b.rem){b.g.position.x=cl(b.g.position.x+ux*s,-ARX,ARX);b.g.position.z=cl(b.g.position.z+uz*s,-ARZ,ARZ)}}
-  if(NET.on)netLoop(dt);hud();camUpdate(dt)}
+  hud();camUpdate(dt)}
  for(let i=FX.length-1;i>=0;i--){const m=FX[i];m.scale.addScalar(dt*14);m.material.opacity-=dt*5;if(m.material.opacity<=0){S.remove(m);m.material.dispose();FX.splice(i,1)}}
  R.render(S,C);
  /* adaptive resolution: keeps frame rate stable on slow GPUs */
