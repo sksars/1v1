@@ -152,9 +152,7 @@ function prep(gl){gl.scene.updateMatrixWorld(true);let lo=1e9,hi=-1e9;
  studio=sg.scene;studio.updateMatrixWorld(true);let bx=new THREE.Box3().setFromObject(studio),sz=bx.getSize(new THREE.Vector3());
  studio.rotation.y=Math.PI/2;studio.updateMatrixWorld(true);bx=new THREE.Box3().setFromObject(studio);const c=bx.getCenter(new THREE.Vector3());
  studio.position.set(-c.x,-bx.min.y,-c.z);S.add(studio);
- {const k2=document.createElement('canvas');k2.width=1024;k2.height=256;const x2=k2.getContext('2d');x2.font='bold 190px Impact,"Arial Black",sans-serif';x2.textAlign='center';x2.textBaseline='middle';x2.fillStyle='#fff';x2.shadowColor='#ff3d7f';x2.shadowBlur=40;x2.fillText('SK SARS',512,138);x2.shadowColor='#2ee6ff';x2.shadowBlur=20;x2.fillText('SK SARS',512,138);
-  const tx=new THREE.CanvasTexture(k2);tx.encoding=THREE.sRGBEncoding;const mk=o=>new THREE.MeshBasicMaterial({map:tx,transparent:true,toneMapped:false,depthWrite:false,opacity:o});
-  /* Removed unused SK SARS arena billboards and floor text. */}
+ 
  P=[new F(0,gg),new F(1,gg,new THREE.Color(.55,.75,1))];
  G.phase='menu';hud();$('loadText').textContent='READY TO FIGHT';$('startFight').disabled=false;
 }catch(e){console.error('Failed to load fighters',e)}})();
