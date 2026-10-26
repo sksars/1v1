@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>1v1 Brawl Arena</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Studio Brawl 3D</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
@@ -18,12 +18,8 @@ canvas{position:fixed;inset:0;width:100%;height:100%}
 #mid{width:80px;text-align:center;font-size:46px;line-height:1;padding-top:14px}
 #ban{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(22vw,150px);letter-spacing:6px;text-shadow:0 0 30px var(--a),4px 4px 0 #000;pointer-events:none;text-align:center;line-height:1}
 #ban.go{animation:pop .5s ease-out}@keyframes pop{from{transform:scale(2.2);opacity:0}to{transform:scale(1);opacity:1}}
-#menu{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(#0000,#000d);text-align:center;padding:20px}
-#menu h1{font-size:min(16vw,120px);line-height:.9;letter-spacing:4px;background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
 button{font:inherit;font-size:28px;letter-spacing:3px;color:#fff;background:#ffffff14;border:2px solid #fff;padding:8px 30px;cursor:pointer;transform:skewX(-12deg)}
 button:hover{background:var(--a);border-color:var(--a)}
-.help{font-family:system-ui,sans-serif;font-size:13px;line-height:1.7;color:#cbd;max-width:560px}
-.help b{color:var(--b)}.brand{font-size:min(9vw,54px);letter-spacing:10px;color:var(--y);text-shadow:0 0 18px var(--a)}
 #pad{position:fixed;inset:auto 0 0 0;display:none;justify-content:space-between;align-items:flex-end;pointer-events:none;padding:0 14px calc(env(safe-area-inset-bottom,0px) + 14px)}
 @media (pointer:coarse){#pad{display:flex}}
 #pad .keys{display:grid;grid-template-columns:repeat(3,62px);gap:6px;pointer-events:auto}#joy{position:relative;width:136px;height:136px;border-radius:50%;background:#0006;border:2px solid #fff8;pointer-events:auto}#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px;border-radius:50%;background:#ffffffcc;box-shadow:0 0 12px var(--a)}#cr{position:fixed;right:12px;top:calc(env(safe-area-inset-top,0px) + 74px);width:46px;height:42px;padding:0;font-size:20px;transform:none;background:#0007;border-radius:10px}
@@ -35,8 +31,6 @@ button:hover{background:var(--a);border-color:var(--a)}
 <div id="mid"><span id="tm">60</span></div>
 <div class="side r"><div class="nm" id="n1">CPU</div><div class="bar"><i class="tr" id="t1"></i><i class="hp" id="h1"></i></div><div class="pips" id="p1"></div></div></div></div>
 <div id="ban"></div><button id="cr" title="Reset camera">🎥</button>
-<div id="menu"><div id="ld" class="help">Loading…</div>
-<div id="btns" style="display:none;gap:12px;flex-wrap:wrap;justify-content:center"><button id="b1">VS CPU</button><button id="b2">2 PLAYERS</button><button id="b3"></button></div></div>
 <div id="pad"><div id="joy"><i id="knob"></i></div>
 <div class="keys"><button data-k="jab">JAB</button><button data-k="kick">KICK</button><button data-k="upper">UP</button><button data-k="round">SPIN</button><button data-k="b">BLK</button></div></div>
 </div>
@@ -68,9 +62,9 @@ let ROT=false;const RT=$('root');
 function resize(){const w=innerWidth,h=innerHeight;ROT=matchMedia('(pointer:coarse)').matches&&h>w;RT.classList.toggle('rot',ROT);
  const W=ROT?h:w,H=ROT?w:h;RT.style.width=ROT?W+'px':'';RT.style.height=ROT?H+'px':'';R.setSize(W,H);C.aspect=W/H;C.updateProjectionMatrix()}
 addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,200));resize();
-const modelData={};async function loadB64(id,count){const parts=await Promise.all(Array.from({length:count},(_,i)=>fetch('assets/model-'+id+'-'+i+'.txt').then(r=>{if(!r.ok)throw new Error('Model data missing: '+id+' part '+i);return r.text()})));modelData[id]=parts.join('')}const b64=id=>{const s=atob(modelData[id]),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u.buffer};
+const b64=async id=>{const n=id==='girl'?8:7;const parts=await Promise.all(Array.from({length:n},(_,i)=>fetch('./assets/model-'+id+'-'+i+'.txt').then(r=>{if(!r.ok)throw Error('Model asset '+id+'-'+i+' failed to load');return r.text()})));const s=atob(parts.join('')),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u.buffer};
 function shrinkTex(root,max){const seen=new Set();root.traverse(o=>{if(!o.isMesh)return;[].concat(o.material).forEach(m=>{for(const k in m){const t=m[k];if(t&&t.isTexture&&!seen.has(t)){seen.add(t);const im=t.image;if(im&&im.width>max){const s=max/im.width,c=document.createElement('canvas');c.width=max;c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);if(im.close)im.close();t.image=c;t.needsUpdate=true}}}})})}
-const parse=id=>new Promise((ok,no)=>{const buf=b64(id);$(id).remove();new THREE.GLTFLoader().parse(buf,'',g=>{if(LOW)shrinkTex(g.scene,id==='girl'?768:512);g.scene.traverse(o=>{if(o.isMesh)[].concat(o.material).forEach(m=>{if(m.isMeshStandardMaterial){m.metalness=Math.min(m.metalness,.3);m.envMapIntensity=1;m.needsUpdate=true}})});ok(g)},no)});
+const parse=async id=>{const buf=await b64(id);return new Promise((ok,no)=>{new THREE.GLTFLoader().parse(buf,'',g=>{if(LOW)shrinkTex(g.scene,id==='girl'?768:512);g.scene.traverse(o=>{if(o.isMesh)[].concat(o.material).forEach(m=>{if(m.isMeshStandardMaterial){m.metalness=Math.min(m.metalness,.3);m.envMapIntensity=1;m.needsUpdate=true}})});ok(g)},no)})};
 const shTex=(()=>{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,2,32,32,32);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
 class F{
  constructor(id,gl,tint){this.id=id;this.g=new THREE.Group();const m=THREE.SkeletonUtils.clone(gl.scene);
@@ -152,19 +146,19 @@ function prep(gl){gl.scene.updateMatrixWorld(true);let lo=1e9,hi=-1e9;
  gl.sc=1.78/(hi-lo);gl.off=-lo*gl.sc;
  gl.animations.forEach(c=>c.tracks.forEach(t=>{if(/Hips\.position$/.test(t.name)){const v=t.values,ly=c.name==='Jump';for(let k=3;k<v.length;k+=3){v[k]=v[0];v[k+2]=v[2];if(ly)v[k+1]=v[1]}}}))}
 (async()=>{try{
- await Promise.all([loadB64('girl',8),loadB64('studio',7)]);
- const sg=await parse('studio');$('ld').textContent='Loading fighters… 50%';
+ const sg=await parse('studio');
  const gg=await parse('girl');prep(gg);
  studio=sg.scene;studio.updateMatrixWorld(true);let bx=new THREE.Box3().setFromObject(studio),sz=bx.getSize(new THREE.Vector3());
  studio.rotation.y=Math.PI/2;studio.updateMatrixWorld(true);bx=new THREE.Box3().setFromObject(studio);const c=bx.getCenter(new THREE.Vector3());
  studio.position.set(-c.x,-bx.min.y,-c.z);S.add(studio);
- /* Removed decorative signage for a cleaner arena. */
+ {const k2=document.createElement('canvas');k2.width=1024;k2.height=256;const x2=k2.getContext('2d');x2.font='bold 190px Impact,"Arial Black",sans-serif';x2.textAlign='center';x2.textBaseline='middle';x2.fillStyle='#fff';x2.shadowColor='#ff3d7f';x2.shadowBlur=40;x2.fillText('SK SARS',512,138);x2.shadowColor='#2ee6ff';x2.shadowBlur=20;x2.fillText('SK SARS',512,138);
+  const tx=new THREE.CanvasTexture(k2);tx.encoding=THREE.sRGBEncoding;const mk=o=>new THREE.MeshBasicMaterial({map:tx,transparent:true,toneMapped:false,depthWrite:false,opacity:o});
+  [-13,-6.5,0,6.5,13].forEach(px=>{const s=new THREE.Mesh(new THREE.PlaneGeometry(5.2,1.3),mk(1));s.position.set(px,2.3,-5.3);S.add(s)});
+  const fl=new THREE.Mesh(new THREE.PlaneGeometry(5.5,1.4),mk(.45));fl.rotation.x=-Math.PI/2;fl.position.set(0,.02,-1.7);S.add(fl)}
  P=[new F(0,gg),new F(1,gg,new THREE.Color(.55,.75,1))];
- $('ld').style.display='none';$('btns').style.display='flex';G.phase='menu';hud();
-}catch(e){$('ld').textContent='Failed to load models: '+e}})();
-function begin(m){try{if(matchMedia('(pointer:coarse)').matches){const el=document.documentElement;(el.requestFullscreen?el.requestFullscreen():Promise.reject()).then(()=>screen.orientation.lock('landscape')).catch(()=>{})}}catch(e){}G.mode=m;G.round=1;G.w=[0,0];$('n1').textContent=n1()==='CPU'?'CPU':'P2';$('menu').style.display='none';startRound()}
-$('b1').onclick=()=>begin('cpu');$('b2').onclick=()=>begin('2p');
-$('b3').textContent=LOW?'LITE MODE: ON':'LITE MODE: OFF';$('b3').onclick=()=>{try{localStorage.setItem('lite',LOW?'0':'1')}catch(e){}location.reload()};
+ G.phase='menu';hud();begin('cpu');
+}catch(e){console.error('Failed to load fighters',e)}})();
+function begin(m){try{if(matchMedia('(pointer:coarse)').matches){const el=document.documentElement;(el.requestFullscreen?el.requestFullscreen():Promise.reject()).then(()=>screen.orientation.lock('landscape')).catch(()=>{})}}catch(e){}G.mode=m;G.round=1;G.w=[0,0];$('n1').textContent=n1()==='CPU'?'CPU':'P2';startRound()}
 const KM={KeyA:[0,'l'],KeyD:[0,'r'],KeyW:[0,'u'],KeyS:[0,'d'],KeyH:[0,'b'],ShiftLeft:[0,'b'],KeyJ:[0,'jab'],KeyK:[0,'kick'],KeyL:[0,'round'],KeyU:[0,'upper'],
 ArrowLeft:[1,'l'],ArrowRight:[1,'r'],ArrowUp:[1,'u'],ArrowDown:[1,'d'],Digit5:[1,'b'],Numpad5:[1,'b'],Digit1:[1,'jab'],Numpad1:[1,'jab'],Digit2:[1,'kick'],Numpad2:[1,'kick'],Digit3:[1,'round'],Numpad3:[1,'round'],Digit4:[1,'upper'],Numpad4:[1,'upper']};
 function setK(pl,k,dn){const f=P[pl];if(!f||(pl&&G.mode==='cpu'))return;if(ATK.includes(k)){if(dn){f.press=k;f.pt=performance.now()}}else f.inp[k]=dn?1:0}
